@@ -28,6 +28,7 @@ public class InvoiceMain {
     private String carrierId2; //載具隱碼
     private String printMark; //已列印註記
     private String npoban; //發票捐贈對象
+//    @pattern value="[0-9][0-9][0-9][0-9]|AAAA
     private String randomNumber; //防偽隨機碼
     private Boolean bondedAreaConfirm; //買受人零稅率註記
     private String zeroTaxRateReason; //零稅率原因
