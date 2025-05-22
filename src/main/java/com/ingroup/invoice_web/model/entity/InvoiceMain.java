@@ -1,13 +1,17 @@
 package com.ingroup.invoice_web.model.entity;
 
-import jakarta.persistence.Embedded;
+import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+@Entity
+@Table(name = "invoice_main")
 public class InvoiceMain {
-    private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String yearMonth;
     private String invoiceNumber;
     private LocalDate invoiceDate;
@@ -56,4 +60,172 @@ public class InvoiceMain {
 
     @Embedded
     private EditRecord editRecord;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setYearMonth(String yearMonth) {
+        this.yearMonth = yearMonth;
+    }
+
+    public void setInvoiceNumber(String invoiceNumber) {
+        this.invoiceNumber = invoiceNumber;
+    }
+
+    public void setInvoiceDate(LocalDate invoiceDate) {
+        this.invoiceDate = invoiceDate;
+    }
+
+    public void setInvoiceTime(LocalTime invoiceTime) {
+        this.invoiceTime = invoiceTime;
+    }
+
+    public void setSeller(String seller) {
+        this.seller = seller;
+    }
+
+    public void setBuyer(Buyer buyer) {
+        this.buyer = buyer;
+    }
+
+    public void setBuyerRemark(String buyerRemark) {
+        this.buyerRemark = buyerRemark;
+    }
+
+    public void setMainRemark(String mainRemark) {
+        this.mainRemark = mainRemark;
+    }
+
+    public void setCustomsClearanceMark(String customsClearanceMark) {
+        this.customsClearanceMark = customsClearanceMark;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public void setRelateNumber(String relateNumber) {
+        this.relateNumber = relateNumber;
+    }
+
+    public void setInvoiceType(String invoiceType) {
+        this.invoiceType = invoiceType;
+    }
+
+    public void setGroupMark(String groupMark) {
+        this.groupMark = groupMark;
+    }
+
+    public void setDonateMark(String donateMark) {
+        this.donateMark = donateMark;
+    }
+
+    public void setCarrierType(String carrierType) {
+        this.carrierType = carrierType;
+    }
+
+    public void setCarrierId1(String carrierId1) {
+        this.carrierId1 = carrierId1;
+    }
+
+    public void setCarrierId2(String carrierId2) {
+        this.carrierId2 = carrierId2;
+    }
+
+    public void setPrintMark(String printMark) {
+        this.printMark = printMark;
+    }
+
+    public void setNpoban(String npoban) {
+        this.npoban = npoban;
+    }
+
+    public void setRandomNumber(String randomNumber) {
+        this.randomNumber = randomNumber;
+    }
+
+    public void setBondedAreaConfirm(Boolean bondedAreaConfirm) {
+        this.bondedAreaConfirm = bondedAreaConfirm;
+    }
+
+    public void setZeroTaxRateReason(String zeroTaxRateReason) {
+        this.zeroTaxRateReason = zeroTaxRateReason;
+    }
+
+    public void setReserved1(String reserved1) {
+        this.reserved1 = reserved1;
+    }
+
+    public void setReserved2(String reserved2) {
+        this.reserved2 = reserved2;
+    }
+
+    public void setSalesAmount(BigDecimal salesAmount) {
+        this.salesAmount = salesAmount;
+    }
+
+    public void setFreeTaxSalesAmount(BigDecimal freeTaxSalesAmount) {
+        this.freeTaxSalesAmount = freeTaxSalesAmount;
+    }
+
+    public void setZeroTaxSalesAmount(BigDecimal zeroTaxSalesAmount) {
+        this.zeroTaxSalesAmount = zeroTaxSalesAmount;
+    }
+
+    public void setTaxType(String taxType) {
+        this.taxType = taxType;
+    }
+
+    public void setTaxRate(BigDecimal taxRate) {
+        this.taxRate = taxRate;
+    }
+
+    public void setTaxAmount(BigDecimal taxAmount) {
+        this.taxAmount = taxAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public void setOriginalCurrencyAmount(BigDecimal originalCurrencyAmount) {
+        this.originalCurrencyAmount = originalCurrencyAmount;
+    }
+
+    public void setExchangeRate(BigDecimal exchangeRate) {
+        this.exchangeRate = exchangeRate;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public void setAllowanceCount(Integer allowanceCount) {
+        this.allowanceCount = allowanceCount;
+    }
+
+    public void setTotalAllowanceAmount(BigDecimal totalAllowanceAmount) {
+        this.totalAllowanceAmount = totalAllowanceAmount;
+    }
+
+    public void setInvoiceBalance(BigDecimal invoiceBalance) {
+        this.invoiceBalance = invoiceBalance;
+    }
+
+    public void setTaxBalance(BigDecimal taxBalance) {
+        this.taxBalance = taxBalance;
+    }
+
+    public void setUploadStatus(String uploadStatus) {
+        this.uploadStatus = uploadStatus;
+    }
+
+    public void setEditRecord(EditRecord editRecord) {
+        this.editRecord = editRecord;
+    }
 }

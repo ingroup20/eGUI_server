@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class CanceledInvoice {
-    private Integer id;
+    private Long id;
     private Integer invoiceId;
     private String cancelInvoiceNumber;
     private LocalDate invoiceDate;

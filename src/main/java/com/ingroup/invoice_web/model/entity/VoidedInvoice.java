@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class VoidedInvoice {
-    private Integer id;
+    private Long id;
     private Integer invoiceId;
     private String voidInvoiceNumber;
     private LocalDate invoiceDate;

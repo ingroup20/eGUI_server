@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class AllowanceDetail {
-    private Integer id;
+    private Long id;
     private Integer allowanceId;
     private LocalDate originalInvoiceDate;
     private String originalInvoiceNumber ;

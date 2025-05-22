@@ -5,7 +5,7 @@ import jakarta.persistence.Embedded;
 import java.math.BigDecimal;
 
 public class ProductItem {
-    private Integer itemId;
+    private Long itemId;
     private String description;
     private BigDecimal quantity;
     private String unit;
