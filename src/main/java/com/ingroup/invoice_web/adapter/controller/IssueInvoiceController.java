@@ -23,6 +23,7 @@ public class IssueInvoiceController {
     @Operation(summary = "單張發票開立")
     @PostMapping
     public ResponseEntity<String> createInvoice(@RequestBody InvoiceMainDto invoiceMainDto) {
+        //單張發票開立，由前端驗證資料
         String invoiceNumber = issueInvoiceService.issueInvoice(invoiceMainDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(invoiceNumber);
     }

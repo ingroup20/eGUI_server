@@ -5,7 +5,8 @@ public enum ErrorCodeEnum {
 
     VI001("混合稅不能同時包含免稅與零稅率"),
     VI002("混合稅總金額加總錯誤"),
-    VI003("特總稅金額檢查未通過");
+    VI003("特總稅金額檢查未通過"),
+    IA001("字軌不足");
 
     private String message;
 
