@@ -51,6 +51,8 @@ public class InvoiceMainDto {
     private BigDecimal exchangeRate; //匯率
     private String currency; //幣別
 
+    private Integer conditionType; //條件種類
+
 
     public LocalDate getInvoiceDate() {
         return invoiceDate;
@@ -274,5 +276,9 @@ public class InvoiceMainDto {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public Integer getConditionType() {
+        return conditionType;
     }
 }

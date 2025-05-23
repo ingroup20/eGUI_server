@@ -19,7 +19,7 @@ public interface AssignGroupRepository extends JpaRepository<AssignGroup, Intege
                                                            @Param("companyId") Integer companyId,
                                                            @Param("printerId") Integer printerId);
 
-    @Query(value = "select * from assign_group where year_month = :yearMonth and company_id = :companyId and printer_id = :printerId and status in (0 or 1) order by status desc , assign_id asc limit 1", nativeQuery = true)
+    @Query(value = "select * from assign_group where year_month = :yearMonth and company_id = :companyId and printer_id = :printerId and status in (0 , 1) order by status desc , assign_id asc limit 1", nativeQuery = true)
     Optional<AssignGroup> findByCompanyAndPrinterAndAvailable(@Param("yearMonth") String yearMonth,
                                                               @Param("companyId") Integer companyId,
                                                               @Param("printerId") Integer printerId);

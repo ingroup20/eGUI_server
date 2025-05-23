@@ -7,8 +7,21 @@ spring:
   h2:
     console:
       enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create  # or update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
   freemarker:
     template-loader-path: classpath:/templates/
     suffix: .ftl
     charset: UTF-8
+
+    logging:
+      level:
+        root: DEBUG         # 設定全域 log 等級為 DEBUG
+        com.ingroup.invoice_web: DEBUG  # 只對你自己的專案套件印 DEBUG（建議）

@@ -15,14 +15,16 @@ import com.ingroup.invoice_web.usecase.service.XmlGeneratorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
-import static com.ingroup.invoice_web.util.DateTimeUtil.getCurrentDateTime;
+import static com.ingroup.invoice_web.util.DateTimeUtil.*;
 import static com.ingroup.invoice_web.util.constant.ErrorCodeEnum.*;
 import static com.ingroup.invoice_web.util.constant.TaxTypeEnum.*;
 
@@ -35,6 +37,8 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
     private final InvoiceDetailRepository invoiceDetailRepository;
     private final XmlGeneratorService xmlGeneratorService;
 
+    private final Integer B2C_SALES_PRICE = 1;
+
     IssueInvoiceServiceImpl(AssignGroupService assignGroupService,
                             InvoiceMainRepository invoiceMainRepository,
                             InvoiceDetailRepository invoiceDetailRepository,
@@ -45,16 +49,19 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
         this.xmlGeneratorService = xmlGeneratorService;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public String issueInvoice(InvoiceMainDto invoiceMainDto) throws IssueInvoiceException {
         UserAccount user = checkLoginUser();
         Company company = checkLoginCompany(user);
         Printer printer = checkLoginPrinter(user);
 
         String invoiceNumber = "";
-        String yearMonth = "";
-        String randomNumber = ""; //todo
-        invoiceMainDto = calculateAmount(invoiceMainDto);
-        invoiceMainDto = calculateTax(invoiceMainDto); //todo b2c售價含稅 b2b定價不含稅
+        String yearMonth = getYearMonthROC(invoiceMainDto.getInvoiceDate());
+        String randomNumber = generateRandomNumber();
+        calculateAmount(invoiceMainDto);
+        if(B2C_SALES_PRICE.equals(invoiceMainDto.getConditionType())) { //b2c售價含稅
+            calculateTax(invoiceMainDto);
+        } //b2b定價不含稅
 
         AssignGroup assignGroup;
         //取號
@@ -67,16 +74,18 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
                     invoiceNumber = assignGroupService.takeAssignNo(assignGroup);
                     logger.info("issueInvoice invoice number: {}, yearMonth: {}, invoice date: {}", invoiceNumber, yearMonth, invoiceMainDto.getInvoiceDate());
                     InvoiceMain invoiceMain = generateInvoiceMain(invoiceMainDto, yearMonth, invoiceNumber, company, user, randomNumber);
-                    invoiceMain = invoiceMainRepository.save(invoiceMain);
 
-                    List<InvoiceDetail> invoiceDetailList = generateInvoiceDetail(invoiceMainDto, invoiceMain.getId(), invoiceNumber);
-                    for (InvoiceDetail invoiceDetail : invoiceDetailList) {
-                        invoiceDetailRepository.save(invoiceDetail);
+                    if (invoiceMain != null) {
+                        invoiceMain = invoiceMainRepository.save(invoiceMain);
+                        logger.debug("save invoice_main id = {}", invoiceMain.getId());
+                        List<InvoiceDetail> invoiceDetailList = generateInvoiceDetail(invoiceMainDto, invoiceMain.getId(), invoiceNumber);
+                        invoiceDetailRepository.saveAll(invoiceDetailList);
+                        logger.debug("save invoice_detail id = {}", invoiceDetailList.stream()
+                                                                                     .map(InvoiceDetail::getId)
+                                                                                     .collect(Collectors.toList()));
+                        //xml要傳到queue
+                        xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList);
                     }
-
-                    //xml要傳到queue
-                    xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList);
-
                     break;
 
                 } catch (NotEnoughAssignException e) {
@@ -86,7 +95,7 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
                     logger.error("嚴重異常");
                 }
             } else {
-                logger.debug("請匯入空白字軌");
+                logger.debug("請匯入可用字軌");
             }
 
         } while (assignGroup != null);
@@ -96,7 +105,7 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
     }
 
 
-    public InvoiceMainDto calculateAmount(InvoiceMainDto invoiceMainDto) throws ValidatedException {
+    private InvoiceMainDto calculateAmount(InvoiceMainDto invoiceMainDto) throws ValidatedException {
 
         //總金額
         List<InvoiceDetailDto> detailList = invoiceMainDto.getInvoiceDetailDtoList();
@@ -159,7 +168,7 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
     }
 
 
-    public InvoiceMainDto calculateTax(InvoiceMainDto invoiceMainDto) {
+    private InvoiceMainDto calculateTax(InvoiceMainDto invoiceMainDto) {
         BigDecimal taxAmount = new BigDecimal(BigInteger.ZERO);
         BigDecimal taxRate = invoiceMainDto.getTaxRate();
         taxAmount = taxAmount.add(taxRate.multiply(invoiceMainDto.getSalesAmount()));
@@ -167,13 +176,7 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
         return invoiceMainDto;
     }
 
-
-    public void generateXML(InvoiceMain invoiceMain, List<InvoiceDetail> invoiceDetailList) {
-
-
-    }
-
-    public InvoiceMain generateInvoiceMain(InvoiceMainDto invoiceMainDto, String yearMonth, String invoiceNumber, Company company, UserAccount user, String randomNumber) throws ValidatedException {
+    private InvoiceMain generateInvoiceMain(InvoiceMainDto invoiceMainDto, String yearMonth, String invoiceNumber, Company company, UserAccount user, String randomNumber) throws ValidatedException {
         InvoiceMain invoiceMain = new InvoiceMain();
         invoiceMain.setYearMonth(yearMonth);
         invoiceMain.setInvoiceNumber(invoiceNumber);
@@ -221,7 +224,7 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
     }
 
 
-    public List<InvoiceDetail> generateInvoiceDetail(InvoiceMainDto invoiceMainDto, Long invoiceMainId, String invoiceNumber) {
+    private List<InvoiceDetail> generateInvoiceDetail(InvoiceMainDto invoiceMainDto, Long invoiceMainId, String invoiceNumber) {
         List<InvoiceDetail> invoiceDetailList = new ArrayList<InvoiceDetail>();
 
         List<InvoiceDetailDto> invoiceDetailDtoList = invoiceMainDto.getInvoiceDetailDtoList();
@@ -243,6 +246,11 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
         }
         return invoiceDetailList;
 
+    }
+
+    private String generateRandomNumber() {
+        int randomNumber = (int) (Math.random() * 10000); //0~9999
+        return String.format("%04d", randomNumber); //前面補0到4位數
     }
 
 }

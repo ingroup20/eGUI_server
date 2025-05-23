@@ -10,6 +10,8 @@ public class AssignGroup {
     private Integer assignId;
     private String yearMonth; //期別
     private String invoiceTrack; //兩碼英文
+    private Integer companyId;
+    private Integer printerId;
     private Integer startNo; //起始號碼
     private Integer usedCount; //已使用數量
     private String lastUsedNo; //最後被使用號碼
@@ -36,6 +38,22 @@ public class AssignGroup {
 
     public void setInvoiceTrack(String invoiceTrack) {
         this.invoiceTrack = invoiceTrack;
+    }
+
+    public Integer getPrinterId() {
+        return printerId;
+    }
+
+    public void setPrinterId(Integer printerId) {
+        this.printerId = printerId;
+    }
+
+    public Integer getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
     }
 
     public Integer getStartNo() {
