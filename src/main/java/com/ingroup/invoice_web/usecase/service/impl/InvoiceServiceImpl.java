@@ -9,11 +9,10 @@ import com.ingroup.invoice_web.model.entity.*;
 import com.ingroup.invoice_web.model.repository.InvoiceDetailRepository;
 import com.ingroup.invoice_web.model.repository.InvoiceMainRepository;
 import com.ingroup.invoice_web.usecase.service.AssignGroupService;
-import com.ingroup.invoice_web.usecase.service.IssueInvoiceService;
+import com.ingroup.invoice_web.usecase.service.InvoiceService;
 import com.ingroup.invoice_web.usecase.service.SecurityService;
 import com.ingroup.invoice_web.usecase.service.XmlGeneratorService;
 import freemarker.template.TemplateException;
-import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,7 +32,7 @@ import static com.ingroup.invoice_web.util.constant.ErrorCodeEnum.*;
 import static com.ingroup.invoice_web.util.constant.TaxTypeEnum.*;
 
 @Service
-public class IssueInvoiceServiceImpl implements IssueInvoiceService {
+public class InvoiceServiceImpl implements InvoiceService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final AssignGroupService assignGroupService;
@@ -44,11 +43,11 @@ public class IssueInvoiceServiceImpl implements IssueInvoiceService {
 
     private final Integer B2C_SALES_PRICE = 1;
 
-    IssueInvoiceServiceImpl(AssignGroupService assignGroupService,
-                            InvoiceMainRepository invoiceMainRepository,
-                            InvoiceDetailRepository invoiceDetailRepository,
-                            XmlGeneratorService xmlGeneratorService,
-                            SecurityService securityService) {
+    InvoiceServiceImpl(AssignGroupService assignGroupService,
+                       InvoiceMainRepository invoiceMainRepository,
+                       InvoiceDetailRepository invoiceDetailRepository,
+                       XmlGeneratorService xmlGeneratorService,
+                       SecurityService securityService) {
         this.assignGroupService = assignGroupService;
         this.invoiceMainRepository = invoiceMainRepository;
         this.invoiceDetailRepository = invoiceDetailRepository;
@@ -91,19 +90,24 @@ public class IssueInvoiceServiceImpl implements IssueInvoiceService {
             }
         }while (assignGroup == null);
 
-        try {
-            logger.info("issueInvoice invoice number: {}, yearMonth: {}, invoice date: {}", invoiceNumber, yearMonth, invoiceMainDto.getInvoiceDate());
-            InvoiceMain invoiceMain = generateInvoiceMain(invoiceMainDto, yearMonth, invoiceNumber, company, user, randomNumber);
-            invoiceMain = invoiceMainRepository.save(invoiceMain);
-            logger.debug("save invoice_main id = {}", invoiceMain.getId());
 
-            List<InvoiceDetail> invoiceDetailList = generateInvoiceDetail(invoiceMainDto, invoiceMain.getId(), invoiceNumber);
-            invoiceDetailRepository.saveAll(invoiceDetailList);
-            logger.debug("save invoice_detail id = {}", invoiceDetailList.stream()
-                    .map(InvoiceDetail::getId)
-                    .collect(Collectors.toList()));
+        logger.info("issueInvoice invoice number: {}, yearMonth: {}, invoice date: {}", invoiceNumber, yearMonth, invoiceMainDto.getInvoiceDate());
+        InvoiceMain invoiceMain = generateInvoiceMain(invoiceMainDto, yearMonth, invoiceNumber, company, user, randomNumber);
+        invoiceMain = invoiceMainRepository.save(invoiceMain);
+        logger.debug("save invoice_main id = {}", invoiceMain.getId());
+
+        List<InvoiceDetail> invoiceDetailList = generateInvoiceDetail(invoiceMainDto, invoiceMain.getId(), invoiceNumber);
+        invoiceDetailRepository.saveAll(invoiceDetailList);
+        logger.debug("save invoice_detail id = {}", invoiceDetailList.stream()
+                .map(InvoiceDetail::getId)
+                .collect(Collectors.toList()));
+
+        try {
             //xml要傳到queue
             xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList);
+
+            //鎖定發票號碼
+
         } catch (IOException e) {
             logger.error("產xml檔案異常");
         } catch (TemplateException e) {
@@ -112,6 +116,11 @@ public class IssueInvoiceServiceImpl implements IssueInvoiceService {
 
         return invoiceNumber;
 
+    }
+
+    @Override
+    public void cancelInvoice(String invoiceId, String cancelReason) {
+        //找到發票主黨...檢查已開立成功...檢查沒有折讓過....檢查沒註銷過...檢查沒刪除過....開立
     }
 
 
