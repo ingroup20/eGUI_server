@@ -15,7 +15,7 @@ public class Company {
     private String telephoneNumber;
     private String facsimileNumber; //傳真號碼
     private String emailAddress;
-    private String customerNumber; //客戶編號
+    private String companyCode; //公司代號
     private String roleRemark; //營業人角色註記
 
     @Embedded
@@ -74,12 +74,12 @@ public class Company {
         this.emailAddress = emailAddress;
     }
 
-    public String getCustomerNumber() {
-        return customerNumber;
+    public String getCompanyCode() {
+        return companyCode;
     }
 
-    public void setCustomerNumber(String customerNumber) {
-        this.customerNumber = customerNumber;
+    public void setCompanyCode(String companyCode) {
+        this.companyCode = companyCode;
     }
 
     public String getRoleRemark() {

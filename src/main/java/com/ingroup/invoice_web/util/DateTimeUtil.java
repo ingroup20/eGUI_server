@@ -28,6 +28,7 @@ public class DateTimeUtil {
 
         String rocYear = String.valueOf(localDate.getYear() - 1911); // 轉民國年
         int month = localDate.getMonthValue();    // 取出月份
-        return rocYear + (month / 2 == 0 ? month : month + 1); //期別月份只有偶數月
+        int eGUIMonth = month % 2 == 0 ? month : month + 1; //期別月份只有偶數月
+        return rocYear + String.format("%02d", eGUIMonth); //補0到2位數
     }
 }

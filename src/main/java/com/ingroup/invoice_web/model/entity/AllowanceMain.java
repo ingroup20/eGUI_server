@@ -7,7 +7,6 @@ import java.time.LocalDate;
 
 public class AllowanceMain {
     private Long id;
-    private String yearMonth;
     private String allowanceNumber;
     private LocalDate AllowanceDate;
     private String seller; //統一編號

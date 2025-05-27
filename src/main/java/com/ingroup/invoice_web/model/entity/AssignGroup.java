@@ -12,7 +12,7 @@ public class AssignGroup {
     private String invoiceTrack; //兩碼英文
     private Integer companyId;
     private Integer printerId;
-    private Integer startNo; //起始號碼
+    private String startNo; //起始號碼
     private Integer usedCount; //已使用數量
     private String lastUsedNo; //最後被使用號碼
     private Integer status; //使用中
@@ -56,11 +56,11 @@ public class AssignGroup {
         this.companyId = companyId;
     }
 
-    public Integer getStartNo() {
+    public String getStartNo() {
         return startNo;
     }
 
-    public void setStartNo(Integer startNo) {
+    public void setStartNo(String startNo) {
         this.startNo = startNo;
     }
 

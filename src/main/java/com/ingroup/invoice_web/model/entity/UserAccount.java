@@ -1,22 +1,36 @@
 package com.ingroup.invoice_web.model.entity;
 
-import jakarta.persistence.Embedded;
+import jakarta.persistence.*;
 
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "user_account")
 public class UserAccount {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    private Integer companyId;
     private String account;
     private String password;
     private String name;
     private String email;
     private String phone;
     private Integer role;
+    private Integer printerId;
     private Integer status;
-
-    @Embedded
-    private EditRecord editRecord;
+    private LocalDate pwSafeDate; //密碼上次更新時間
 
     public Integer getId() {
         return id;
+    }
+
+    public Integer getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
     }
 
     public Integer getStatus() {
@@ -73,5 +87,21 @@ public class UserAccount {
 
     public void setAccount(String account) {
         this.account = account;
+    }
+
+    public Integer getPrinterId() {
+        return printerId;
+    }
+
+    public void setPrinterId(Integer printerId) {
+        this.printerId = printerId;
+    }
+
+    public LocalDate getPwSafeDate() {
+        return pwSafeDate;
+    }
+
+    public void setPwSafeDate(LocalDate pwSafeDate) {
+        this.pwSafeDate = pwSafeDate;
     }
 }

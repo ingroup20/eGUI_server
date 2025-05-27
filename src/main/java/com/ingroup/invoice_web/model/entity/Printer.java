@@ -8,6 +8,7 @@ public class Printer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY )
     private Integer printerId;
+    private Integer companyId;
     private String printerName;
     private String printerKey;
     private String printType;
@@ -16,6 +17,14 @@ public class Printer {
 
     public Integer getPrinterId() {
         return printerId;
+    }
+
+    public Integer getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
     }
 
     public String getPrinterName() {

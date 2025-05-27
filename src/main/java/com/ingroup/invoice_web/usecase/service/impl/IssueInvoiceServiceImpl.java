@@ -3,7 +3,7 @@ package com.ingroup.invoice_web.usecase.service.impl;
 import com.ingroup.invoice_web.adapter.dto.InvoiceDetailDto;
 import com.ingroup.invoice_web.adapter.dto.InvoiceMainDto;
 import com.ingroup.invoice_web.exception.IssueInvoiceException;
-import com.ingroup.invoice_web.exception.NotEnoughAssignException;
+import com.ingroup.invoice_web.exception.UsedUpAssignException;
 import com.ingroup.invoice_web.exception.ValidatedException;
 import com.ingroup.invoice_web.model.entity.*;
 import com.ingroup.invoice_web.model.repository.InvoiceDetailRepository;
@@ -12,11 +12,14 @@ import com.ingroup.invoice_web.usecase.service.AssignGroupService;
 import com.ingroup.invoice_web.usecase.service.IssueInvoiceService;
 import com.ingroup.invoice_web.usecase.service.SecurityService;
 import com.ingroup.invoice_web.usecase.service.XmlGeneratorService;
+import freemarker.template.TemplateException;
+import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -24,36 +27,40 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.ingroup.invoice_web.util.DateTimeUtil.*;
+import static com.ingroup.invoice_web.util.DateTimeUtil.getCurrentDateTime;
+import static com.ingroup.invoice_web.util.DateTimeUtil.getYearMonthROC;
 import static com.ingroup.invoice_web.util.constant.ErrorCodeEnum.*;
 import static com.ingroup.invoice_web.util.constant.TaxTypeEnum.*;
 
 @Service
-public class IssueInvoiceServiceImpl extends SecurityService implements IssueInvoiceService {
+public class IssueInvoiceServiceImpl implements IssueInvoiceService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final AssignGroupService assignGroupService;
     private final InvoiceMainRepository invoiceMainRepository;
     private final InvoiceDetailRepository invoiceDetailRepository;
     private final XmlGeneratorService xmlGeneratorService;
+    private final SecurityService securityService;
 
     private final Integer B2C_SALES_PRICE = 1;
 
     IssueInvoiceServiceImpl(AssignGroupService assignGroupService,
                             InvoiceMainRepository invoiceMainRepository,
                             InvoiceDetailRepository invoiceDetailRepository,
-                            XmlGeneratorService xmlGeneratorService) {
+                            XmlGeneratorService xmlGeneratorService,
+                            SecurityService securityService) {
         this.assignGroupService = assignGroupService;
         this.invoiceMainRepository = invoiceMainRepository;
         this.invoiceDetailRepository = invoiceDetailRepository;
         this.xmlGeneratorService = xmlGeneratorService;
+        this.securityService = securityService;
     }
 
     @Transactional(rollbackFor = Exception.class)
     public String issueInvoice(InvoiceMainDto invoiceMainDto) throws IssueInvoiceException {
-        UserAccount user = checkLoginUser();
-        Company company = checkLoginCompany(user);
-        Printer printer = checkLoginPrinter(user);
+        UserAccount user = securityService.checkLoginUser();
+        Company company = securityService.checkLoginCompany(user);
+        Printer printer = securityService.checkLoginPrinter(user);
 
         String invoiceNumber = "";
         String yearMonth = getYearMonthROC(invoiceMainDto.getInvoiceDate());
@@ -67,38 +74,41 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
         //取號
 
         do {
-            assignGroup = assignGroupService.getAvailableAssign(yearMonth, company, printer).orElse(null);
-            if (assignGroup != null) {
-                //正在使用同一字軌
-                try {
-                    invoiceNumber = assignGroupService.takeAssignNo(assignGroup);
-                    logger.info("issueInvoice invoice number: {}, yearMonth: {}, invoice date: {}", invoiceNumber, yearMonth, invoiceMainDto.getInvoiceDate());
-                    InvoiceMain invoiceMain = generateInvoiceMain(invoiceMainDto, yearMonth, invoiceNumber, company, user, randomNumber);
-
-                    if (invoiceMain != null) {
-                        invoiceMain = invoiceMainRepository.save(invoiceMain);
-                        logger.debug("save invoice_main id = {}", invoiceMain.getId());
-                        List<InvoiceDetail> invoiceDetailList = generateInvoiceDetail(invoiceMainDto, invoiceMain.getId(), invoiceNumber);
-                        invoiceDetailRepository.saveAll(invoiceDetailList);
-                        logger.debug("save invoice_detail id = {}", invoiceDetailList.stream()
-                                                                                     .map(InvoiceDetail::getId)
-                                                                                     .collect(Collectors.toList()));
-                        //xml要傳到queue
-                        xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList);
-                    }
-                    break;
-
-                } catch (NotEnoughAssignException e) {
-                    logger.debug("重取一次字軌");
-                    continue;
-                } catch (Exception e) {
-                    logger.error("嚴重異常");
-                }
-            } else {
-                logger.debug("請匯入可用字軌");
+            assignGroup = assignGroupService.getInUseAssign(yearMonth, company, printer)
+                    .orElseGet(() ->assignGroupService.getPerUseAssign(yearMonth, company, printer)
+                            .orElseGet(() -> assignGroupService.getAvailableAssign(yearMonth, company, printer)));
+            logger.info("assignGroup = {}", assignGroup);
+            try {
+                invoiceNumber = assignGroupService.takeAssignNo(assignGroup);
+                break;
+            } catch (UsedUpAssignException e) {
+                logger.debug("當前字軌無號碼，重取一次字軌");
+                assignGroup = null;
+                continue;
+            } catch (Exception e) {
+                logger.error("嚴重異常");
+                break;
             }
+        }while (assignGroup == null);
 
-        } while (assignGroup != null);
+        try {
+            logger.info("issueInvoice invoice number: {}, yearMonth: {}, invoice date: {}", invoiceNumber, yearMonth, invoiceMainDto.getInvoiceDate());
+            InvoiceMain invoiceMain = generateInvoiceMain(invoiceMainDto, yearMonth, invoiceNumber, company, user, randomNumber);
+            invoiceMain = invoiceMainRepository.save(invoiceMain);
+            logger.debug("save invoice_main id = {}", invoiceMain.getId());
+
+            List<InvoiceDetail> invoiceDetailList = generateInvoiceDetail(invoiceMainDto, invoiceMain.getId(), invoiceNumber);
+            invoiceDetailRepository.saveAll(invoiceDetailList);
+            logger.debug("save invoice_detail id = {}", invoiceDetailList.stream()
+                    .map(InvoiceDetail::getId)
+                    .collect(Collectors.toList()));
+            //xml要傳到queue
+            xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList);
+        } catch (IOException e) {
+            logger.error("產xml檔案異常");
+        } catch (TemplateException e) {
+            logger.error("xml模板套用異常");
+        }
 
         return invoiceNumber;
 
@@ -220,7 +230,7 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
         String nowDateTime = getCurrentDateTime();
         invoiceMain.setEditRecord(new EditRecord(nowDateTime, nowDateTime, user.getId()));
 
-        return null;
+        return invoiceMain;
     }
 
 
@@ -230,6 +240,7 @@ public class IssueInvoiceServiceImpl extends SecurityService implements IssueInv
         List<InvoiceDetailDto> invoiceDetailDtoList = invoiceMainDto.getInvoiceDetailDtoList();
         for (InvoiceDetailDto invoiceDetailDto : invoiceDetailDtoList) {
             InvoiceDetail invoiceDetail = new InvoiceDetail();
+            invoiceDetail.setInvoiceDate(invoiceMainDto.getInvoiceDate());
             invoiceDetail.setInvoiceMainId(invoiceMainId);
             invoiceDetail.setInvoiceNumber(invoiceNumber);
             invoiceDetail.setDescription(invoiceDetailDto.getDescription());

@@ -3,6 +3,7 @@ package com.ingroup.invoice_web.model.entity;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "invoice_detail")
@@ -10,6 +11,7 @@ public class InvoiceDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private LocalDate invoiceDate;
     private Long invoiceMainId;
     private String invoiceNumber;
     private String description;
@@ -28,6 +30,14 @@ public class InvoiceDetail {
 
     public Long getId() {
         return id;
+    }
+
+    public LocalDate getInvoiceDate() {
+        return invoiceDate;
+    }
+
+    public void setInvoiceDate(LocalDate invoiceDate) {
+        this.invoiceDate = invoiceDate;
     }
 
     public Long getInvoiceMainId() {
