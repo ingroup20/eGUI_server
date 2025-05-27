@@ -1,6 +1,7 @@
 package com.ingroup.invoice_web.usecase.service.impl;
 
 import com.ingroup.invoice_web.exception.NotEnoughAssignException;
+import com.ingroup.invoice_web.exception.UsedUpAssignException;
 import com.ingroup.invoice_web.model.entity.AssignGroup;
 import com.ingroup.invoice_web.model.entity.Company;
 import com.ingroup.invoice_web.model.entity.Printer;
@@ -23,37 +24,52 @@ public class AssignGroupServiceImpl implements AssignGroupService {
     }
 
 
-//    @Override
-//    public Optional<AssignGroup> getRemainingNo(String yearMonth, Company company, Printer printer) {
-//        Integer companyId = company.getCompanyId();
-//        Integer printerId = printer.getPrinterId();
-//        return assignGroupRepository.findByCompanyAndPrinterAndInUse(yearMonth, companyId, printerId);
-//    }
+    @Override
+    public AssignGroup getAvailableAssign(String yearMonth, Company company, Printer printer) {
+        Integer companyId = company.getCompanyId();
+        AssignGroup assignGroup = assignGroupRepository.findByCompanyAndAvailable(yearMonth, companyId)
+                .orElseThrow(() -> new NotEnoughAssignException("no enough assign , please set new assign"));
+        assignGroup.setPrinterId(printer.getPrinterId());
+        assignGroup.setStatus(1);
+        assignGroupRepository.save(assignGroup);
+        return assignGroup;
+    }
 
     @Override
-    public Optional<AssignGroup> getAvailableAssign(String yearMonth, Company company, Printer printer) {
+    public Optional<AssignGroup> getInUseAssign(String yearMonth, Company company, Printer printer) {
         Integer companyId = company.getCompanyId();
         Integer printerId = printer.getPrinterId();
-        return assignGroupRepository.findByCompanyAndPrinterAndAvailable(yearMonth, companyId, printerId);
+        return assignGroupRepository.findByCompanyAndPrinterAndInUse(yearMonth, companyId, printerId);
+    }
+
+    @Override
+    public Optional<AssignGroup> getPerUseAssign(String yearMonth, Company company, Printer printer) {
+        Integer companyId = company.getCompanyId();
+        Integer printerId = printer.getPrinterId();
+        return assignGroupRepository.findByCompanyAndPrinterAndPreUse(yearMonth, companyId, printerId);
     }
 
     @Override
     public String takeAssignNo(AssignGroup assignGroup) throws Exception {
-        Integer endNo = assignGroup.getStartNo() + 49; //一組50號，紀錄取二位數
-        Integer lastNo = assignGroup.getStartNo() + assignGroup.getUsedCount() - 1; //已被使用的最後一號
 
-        if (lastNo < endNo) {
-            if (assignGroup.getLastUsedNo().substring(8, 10).equals(lastNo.toString())) {
-                String assignNo = assignGroup.getLastUsedNo().substring(0, 8) + (lastNo + 1);
-                return assignNo;
-            } else {
-                logger.error("嚴重字軌錯誤");
-                throw new Exception("嚴重字軌錯誤");
-            }
+        if (assignGroup.getUsedCount() < 50) {
+            String assignNo ;
+                if(assignGroup.getLastUsedNo() == null){
+                    assignNo = assignGroup.getStartNo();
+                }else {
+                    assignNo = assignGroup.getLastUsedNo().substring(0, 8) +1;
+                }
+                assignGroup.setLastUsedNo(assignNo);
+                assignGroup.setUsedCount(assignGroup.getUsedCount() + 1);
+                assignGroupRepository.save(assignGroup);
+
+                return assignGroup.getInvoiceTrack() + assignNo;
 
         } else {
+            assignGroup.setStatus(2);
+            assignGroupRepository.save(assignGroup);
             logger.warn("此字軌已無號碼");
-            throw new NotEnoughAssignException("此字軌已無號碼");
+            throw new UsedUpAssignException("此字軌已無號碼");
         }
     }
 }

@@ -8,7 +8,10 @@ import java.util.Optional;
 
 public interface AssignGroupService {
 
-    Optional<AssignGroup> getAvailableAssign(String yearMonth, Company company, Printer printer);
+    AssignGroup getAvailableAssign(String yearMonth, Company company, Printer printer);
+    Optional<AssignGroup> getInUseAssign(String yearMonth, Company company, Printer printer);
+    Optional<AssignGroup> getPerUseAssign(String yearMonth, Company company, Printer printer);
+
 
     String takeAssignNo(AssignGroup assignGroup) throws Exception;
 }
