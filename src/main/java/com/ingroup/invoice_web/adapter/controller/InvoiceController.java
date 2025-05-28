@@ -1,6 +1,8 @@
 package com.ingroup.invoice_web.adapter.controller;
 
+import com.ingroup.invoice_web.adapter.dto.CanceledInvoiceDto;
 import com.ingroup.invoice_web.adapter.dto.InvoiceMainDto;
+import com.ingroup.invoice_web.adapter.dto.VoidedInvoiceDto;
 import com.ingroup.invoice_web.usecase.service.InvoiceService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.HttpStatus;
@@ -27,15 +29,17 @@ public class InvoiceController {
 
     @Operation(summary = "註銷單張發票")
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelInvoice(@PathVariable Long id) {
-
+    public ResponseEntity<?> cancelInvoice(@PathVariable CanceledInvoiceDto canceledInvoiceDto) {
+        invoiceService.cancelInvoice(canceledInvoiceDto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body("");
     };
 
     @Operation(summary = "作廢單張發票")
     @PostMapping("/{id}/void")
-    public ResponseEntity<?> voidInvoice(@PathVariable Long id) {
+    public ResponseEntity<?> voidInvoice(@PathVariable VoidedInvoiceDto voidedInvoiceDto) {
+
+        invoiceService.voidInvoice(voidedInvoiceDto);
         return ResponseEntity.status(HttpStatus.CREATED).body("");
     };
 

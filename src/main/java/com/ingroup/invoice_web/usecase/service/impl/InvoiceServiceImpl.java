@@ -1,17 +1,17 @@
 package com.ingroup.invoice_web.usecase.service.impl;
 
+import com.ingroup.invoice_web.adapter.dto.CanceledInvoiceDto;
 import com.ingroup.invoice_web.adapter.dto.InvoiceDetailDto;
 import com.ingroup.invoice_web.adapter.dto.InvoiceMainDto;
+import com.ingroup.invoice_web.adapter.dto.VoidedInvoiceDto;
 import com.ingroup.invoice_web.exception.IssueInvoiceException;
+import com.ingroup.invoice_web.exception.KeyOnLockException;
 import com.ingroup.invoice_web.exception.UsedUpAssignException;
 import com.ingroup.invoice_web.exception.ValidatedException;
 import com.ingroup.invoice_web.model.entity.*;
 import com.ingroup.invoice_web.model.repository.InvoiceDetailRepository;
 import com.ingroup.invoice_web.model.repository.InvoiceMainRepository;
-import com.ingroup.invoice_web.usecase.service.AssignGroupService;
-import com.ingroup.invoice_web.usecase.service.InvoiceService;
-import com.ingroup.invoice_web.usecase.service.SecurityService;
-import com.ingroup.invoice_web.usecase.service.XmlGeneratorService;
+import com.ingroup.invoice_web.usecase.service.*;
 import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +40,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceDetailRepository invoiceDetailRepository;
     private final XmlGeneratorService xmlGeneratorService;
     private final SecurityService securityService;
+    private final RedisLockService redisLockService;
 
     private final Integer B2C_SALES_PRICE = 1;
 
@@ -47,12 +48,14 @@ public class InvoiceServiceImpl implements InvoiceService {
                        InvoiceMainRepository invoiceMainRepository,
                        InvoiceDetailRepository invoiceDetailRepository,
                        XmlGeneratorService xmlGeneratorService,
-                       SecurityService securityService) {
+                       SecurityService securityService,
+                       RedisLockService redisLockService) {
         this.assignGroupService = assignGroupService;
         this.invoiceMainRepository = invoiceMainRepository;
         this.invoiceDetailRepository = invoiceDetailRepository;
         this.xmlGeneratorService = xmlGeneratorService;
         this.securityService = securityService;
+        this.redisLockService = redisLockService;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -79,6 +82,10 @@ public class InvoiceServiceImpl implements InvoiceService {
             logger.info("assignGroup = {}", assignGroup);
             try {
                 invoiceNumber = assignGroupService.takeAssignNo(assignGroup);
+                if(redisLockService.checkLockKeyExists(invoiceNumber)){
+                    logger.error("the invoice number is locked , invoice number = {}", invoiceNumber);
+                    throw new KeyOnLockException("error, the invoice number is locked"); //todo 通知前端
+                }
                 break;
             } catch (UsedUpAssignException e) {
                 logger.debug("當前字軌無號碼，重取一次字軌");
@@ -92,11 +99,11 @@ public class InvoiceServiceImpl implements InvoiceService {
 
 
         logger.info("issueInvoice invoice number: {}, yearMonth: {}, invoice date: {}", invoiceNumber, yearMonth, invoiceMainDto.getInvoiceDate());
-        InvoiceMain invoiceMain = generateInvoiceMain(invoiceMainDto, yearMonth, invoiceNumber, company, user, randomNumber);
+        InvoiceMain invoiceMain = invoiceMainDto.generateInvoiceMain(invoiceMainDto, yearMonth, invoiceNumber, company, user, randomNumber); //小心方法呼叫
         invoiceMain = invoiceMainRepository.save(invoiceMain);
         logger.debug("save invoice_main id = {}", invoiceMain.getId());
 
-        List<InvoiceDetail> invoiceDetailList = generateInvoiceDetail(invoiceMainDto, invoiceMain.getId(), invoiceNumber);
+        List<InvoiceDetail> invoiceDetailList = invoiceMainDto.generateInvoiceDetail(invoiceMainDto, invoiceMain.getId(), invoiceNumber); //小心方法呼叫
         invoiceDetailRepository.saveAll(invoiceDetailList);
         logger.debug("save invoice_detail id = {}", invoiceDetailList.stream()
                 .map(InvoiceDetail::getId)
@@ -106,7 +113,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             //xml要傳到queue
             xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList);
 
-            //鎖定發票號碼
+            //queue接到後才鎖定發票號碼
 
         } catch (IOException e) {
             logger.error("產xml檔案異常");
@@ -119,8 +126,83 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
-    public void cancelInvoice(String invoiceId, String cancelReason) {
+    public void cancelInvoice(CanceledInvoiceDto canceledInvoiceDto) {
+        UserAccount user = securityService.checkLoginUser();
+        Company company = securityService.checkLoginCompany(user);
+
         //找到發票主黨...檢查已開立成功...檢查沒有折讓過....檢查沒註銷過...檢查沒刪除過....開立
+        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(canceledInvoiceDto.getInvoiceId()).orElseThrow(()-> new RuntimeException("發票上傳中"));
+
+        if(invoiceMain.getAllowanceCount() != 0 ){
+            throw new RuntimeException("有折讓，不能作廢");
+        }
+
+        CanceledInvoice canceledInvoice = new CanceledInvoice();
+        canceledInvoice.setInvoiceId(canceledInvoiceDto.getInvoiceId());
+        canceledInvoice.setCancelInvoiceNumber(invoiceMain.getInvoiceNumber());
+        canceledInvoice.setInvoiceDate(invoiceMain.getInvoiceDate());
+        canceledInvoice.setBuyerId(invoiceMain.getBuyer().getIdentifier());
+        canceledInvoice.setSellerId(invoiceMain.getSeller());
+        canceledInvoice.setCancelDate(canceledInvoiceDto.getCancelDate());
+        canceledInvoice.setCancelTime(canceledInvoiceDto.getCancelTime());
+        canceledInvoice.setCancelReason(canceledInvoiceDto.getCancelReason());
+        canceledInvoice.setReturnTaxDocumentNumber(canceledInvoiceDto.getReturnTaxDocumentNumber());
+        canceledInvoice.setRemark(canceledInvoiceDto.getRemark());
+        canceledInvoice.setReserved1(canceledInvoiceDto.getReserved1());
+        canceledInvoice.setReserved2(canceledInvoiceDto.getReserved2());
+        String nowDateTime = getCurrentDateTime();
+        canceledInvoice.setEditRecord(new EditRecord(nowDateTime,nowDateTime, user.getId()));
+
+        if(invoiceMain.getMigType().equals(canceledInvoiceDto.getSourceMigType())) {
+            try {
+                //xml要傳到queue
+                xmlGeneratorService.generateCanceledInvoiceXML(canceledInvoice, canceledInvoiceDto.getSourceMigType());
+
+            } catch (IOException e) {
+                logger.error("產xml檔案異常");
+            } catch (TemplateException e) {
+                logger.error("xml模板套用異常");
+            }
+        }
+    }
+
+    @Override
+    public void voidInvoice(VoidedInvoiceDto voidedInvoiceDto) {
+        UserAccount user = securityService.checkLoginUser();
+        Company company = securityService.checkLoginCompany(user);
+
+        //找到發票主黨...檢查已開立成功...檢查沒有折讓過....檢查沒註銷過...檢查沒刪除過....開立
+        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(voidedInvoiceDto.getInvoiceId()).orElseThrow(()-> new RuntimeException("發票上傳中"));
+
+        if(invoiceMain.getAllowanceCount() != 0 ){
+            throw new RuntimeException("有折讓，不能作廢");
+        }
+
+        VoidedInvoice voidedInvoice = new VoidedInvoice();
+        voidedInvoice.setInvoiceId(voidedInvoiceDto.getInvoiceId());
+        voidedInvoice.setVoidInvoiceNumber(invoiceMain.getInvoiceNumber());
+        voidedInvoice.setInvoiceDate(invoiceMain.getInvoiceDate());
+        voidedInvoice.setBuyerId(invoiceMain.getBuyer().getIdentifier());
+        voidedInvoice.setSellerId(invoiceMain.getSeller());
+        voidedInvoice.setVoidDate(voidedInvoiceDto.getVoidDate());
+        voidedInvoice.setVoidTime(voidedInvoiceDto.getVoidTime());
+        voidedInvoice.setVoidReason(voidedInvoiceDto.getVoidReason());
+        voidedInvoice.setRemark(voidedInvoiceDto.getRemark());
+        voidedInvoice.setReserved1(voidedInvoiceDto.getReserved1());
+        voidedInvoice.setReserved2(voidedInvoiceDto.getReserved2());
+        String nowDateTime = getCurrentDateTime();
+        voidedInvoice.setEditRecord(new EditRecord(nowDateTime,nowDateTime, user.getId()));
+
+        try {
+            //xml要傳到queue
+            xmlGeneratorService.generateVoidedInvoiceXML(voidedInvoice);
+
+        } catch (IOException e) {
+            logger.error("產xml檔案異常");
+        } catch (TemplateException e) {
+            logger.error("xml模板套用異常");
+        }
+
     }
 
 
@@ -195,78 +277,6 @@ public class InvoiceServiceImpl implements InvoiceService {
         return invoiceMainDto;
     }
 
-    private InvoiceMain generateInvoiceMain(InvoiceMainDto invoiceMainDto, String yearMonth, String invoiceNumber, Company company, UserAccount user, String randomNumber) throws ValidatedException {
-        InvoiceMain invoiceMain = new InvoiceMain();
-        invoiceMain.setYearMonth(yearMonth);
-        invoiceMain.setInvoiceNumber(invoiceNumber);
-        invoiceMain.setInvoiceDate(invoiceMainDto.getInvoiceDate());
-        invoiceMain.setSeller(company.getIdentifier());
-        invoiceMain.setBuyer(invoiceMainDto.getBuyer());
-        invoiceMain.setBuyerRemark(invoiceMainDto.getBuyerRemark());
-        invoiceMain.setMainRemark(invoiceMainDto.getMainRemark());
-        invoiceMain.setCustomsClearanceMark(invoiceMainDto.getCustomsClearanceMark());
-        invoiceMain.setRelateNumber(invoiceMainDto.getRelateNumber());
-        invoiceMain.setInvoiceType(invoiceMainDto.getInvoiceType());
-        invoiceMain.setGroupMark(invoiceMainDto.getGroupMark());
-        invoiceMain.setDonateMark(invoiceMainDto.getDonateMark());
-        invoiceMain.setCarrierType(invoiceMainDto.getCarrierType());
-        invoiceMain.setCarrierId1(invoiceMainDto.getCarrierId1());
-        invoiceMain.setCarrierId2(invoiceMainDto.getCarrierId2());
-        invoiceMain.setNpoban(invoiceMainDto.getNpoban());
-        invoiceMain.setRandomNumber(randomNumber);//
-        invoiceMain.setBondedAreaConfirm(invoiceMainDto.getBondedAreaConfirm());
-        invoiceMain.setZeroTaxRateReason(invoiceMainDto.getZeroTaxRateReason());
-
-        invoiceMain.setSalesAmount(invoiceMainDto.getSalesAmount());
-        invoiceMain.setFreeTaxSalesAmount(invoiceMainDto.getFreeTaxSalesAmount());
-        invoiceMain.setZeroTaxSalesAmount(invoiceMainDto.getZeroTaxSalesAmount());
-        invoiceMain.setTaxType(invoiceMainDto.getTaxType());
-        invoiceMain.setTaxRate(invoiceMainDto.getTaxRate());
-        invoiceMain.setTaxAmount(invoiceMainDto.getTaxAmount());
-        invoiceMain.setTotalAmount(invoiceMainDto.getTotalAmount());
-        invoiceMain.setDiscountAmount(invoiceMainDto.getDiscountAmount());
-        invoiceMain.setOriginalCurrencyAmount(invoiceMainDto.getOriginalCurrencyAmount());
-        invoiceMain.setExchangeRate(invoiceMainDto.getExchangeRate());
-        invoiceMain.setCurrency(invoiceMainDto.getCurrency());
-
-        invoiceMain.setAllowanceCount(0);
-        invoiceMain.setTotalAllowanceAmount(new BigDecimal(BigInteger.ZERO));
-        invoiceMain.setInvoiceBalance(invoiceMainDto.getTotalAmount()); //
-        invoiceMain.setTaxBalance(invoiceMainDto.getTaxAmount()); //
-
-        // 補充欄位（如有需要）：
-        invoiceMain.setUploadStatus("待上傳");
-        String nowDateTime = getCurrentDateTime();
-        invoiceMain.setEditRecord(new EditRecord(nowDateTime, nowDateTime, user.getId()));
-
-        return invoiceMain;
-    }
-
-
-    private List<InvoiceDetail> generateInvoiceDetail(InvoiceMainDto invoiceMainDto, Long invoiceMainId, String invoiceNumber) {
-        List<InvoiceDetail> invoiceDetailList = new ArrayList<InvoiceDetail>();
-
-        List<InvoiceDetailDto> invoiceDetailDtoList = invoiceMainDto.getInvoiceDetailDtoList();
-        for (InvoiceDetailDto invoiceDetailDto : invoiceDetailDtoList) {
-            InvoiceDetail invoiceDetail = new InvoiceDetail();
-            invoiceDetail.setInvoiceDate(invoiceMainDto.getInvoiceDate());
-            invoiceDetail.setInvoiceMainId(invoiceMainId);
-            invoiceDetail.setInvoiceNumber(invoiceNumber);
-            invoiceDetail.setDescription(invoiceDetailDto.getDescription());
-            invoiceDetail.setQuantity(invoiceDetailDto.getQuantity());
-            invoiceDetail.setUnit(invoiceDetailDto.getUnit());
-            invoiceDetail.setUnitPrice(invoiceDetailDto.getUnitPrice());
-            invoiceDetail.setTaxType(invoiceDetailDto.getTaxType());
-            invoiceDetail.setSalesAmount(invoiceDetailDto.getSalesAmount());
-            invoiceDetail.setSequenceNumber(invoiceDetailDto.getSequenceNumber());
-            invoiceDetail.setRemark(invoiceDetailDto.getRemark());
-            invoiceDetail.setRelateNumber(invoiceDetailDto.getRelateNumber());
-
-            invoiceDetailList.add(invoiceDetail);
-        }
-        return invoiceDetailList;
-
-    }
 
     private String generateRandomNumber() {
         int randomNumber = (int) (Math.random() * 10000); //0~9999

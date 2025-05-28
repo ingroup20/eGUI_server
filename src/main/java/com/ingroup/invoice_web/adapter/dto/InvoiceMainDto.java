@@ -1,12 +1,17 @@
 package com.ingroup.invoice_web.adapter.dto;
 
-import com.ingroup.invoice_web.model.entity.Buyer;
+import com.ingroup.invoice_web.exception.ValidatedException;
+import com.ingroup.invoice_web.model.entity.*;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+
+import static com.ingroup.invoice_web.util.DateTimeUtil.getCurrentDateTime;
 
 public class InvoiceMainDto {
     @NotNull
@@ -281,4 +286,79 @@ public class InvoiceMainDto {
     public Integer getConditionType() {
         return conditionType;
     }
+
+
+    public InvoiceMain generateInvoiceMain(InvoiceMainDto invoiceMainDto, String yearMonth, String invoiceNumber, Company company, UserAccount user, String randomNumber) throws ValidatedException {
+        InvoiceMain invoiceMain = new InvoiceMain();
+        invoiceMain.setYearMonth(yearMonth);
+        invoiceMain.setInvoiceNumber(invoiceNumber);
+        invoiceMain.setInvoiceDate(invoiceMainDto.getInvoiceDate());
+        invoiceMain.setSeller(company.getIdentifier());
+        invoiceMain.setBuyer(invoiceMainDto.getBuyer());
+        invoiceMain.setBuyerRemark(invoiceMainDto.getBuyerRemark());
+        invoiceMain.setMainRemark(invoiceMainDto.getMainRemark());
+        invoiceMain.setCustomsClearanceMark(invoiceMainDto.getCustomsClearanceMark());
+        invoiceMain.setRelateNumber(invoiceMainDto.getRelateNumber());
+        invoiceMain.setInvoiceType(invoiceMainDto.getInvoiceType());
+        invoiceMain.setGroupMark(invoiceMainDto.getGroupMark());
+        invoiceMain.setDonateMark(invoiceMainDto.getDonateMark());
+        invoiceMain.setCarrierType(invoiceMainDto.getCarrierType());
+        invoiceMain.setCarrierId1(invoiceMainDto.getCarrierId1());
+        invoiceMain.setCarrierId2(invoiceMainDto.getCarrierId2());
+        invoiceMain.setNpoban(invoiceMainDto.getNpoban());
+        invoiceMain.setRandomNumber(randomNumber);//
+        invoiceMain.setBondedAreaConfirm(invoiceMainDto.getBondedAreaConfirm());
+        invoiceMain.setZeroTaxRateReason(invoiceMainDto.getZeroTaxRateReason());
+
+        invoiceMain.setSalesAmount(invoiceMainDto.getSalesAmount());
+        invoiceMain.setFreeTaxSalesAmount(invoiceMainDto.getFreeTaxSalesAmount());
+        invoiceMain.setZeroTaxSalesAmount(invoiceMainDto.getZeroTaxSalesAmount());
+        invoiceMain.setTaxType(invoiceMainDto.getTaxType());
+        invoiceMain.setTaxRate(invoiceMainDto.getTaxRate());
+        invoiceMain.setTaxAmount(invoiceMainDto.getTaxAmount());
+        invoiceMain.setTotalAmount(invoiceMainDto.getTotalAmount());
+        invoiceMain.setDiscountAmount(invoiceMainDto.getDiscountAmount());
+        invoiceMain.setOriginalCurrencyAmount(invoiceMainDto.getOriginalCurrencyAmount());
+        invoiceMain.setExchangeRate(invoiceMainDto.getExchangeRate());
+        invoiceMain.setCurrency(invoiceMainDto.getCurrency());
+
+        invoiceMain.setAllowanceCount(0);
+        invoiceMain.setTotalAllowanceAmount(new BigDecimal(BigInteger.ZERO));
+        invoiceMain.setInvoiceBalance(invoiceMainDto.getTotalAmount()); //
+        invoiceMain.setTaxBalance(invoiceMainDto.getTaxAmount()); //
+
+        // 補充欄位（如有需要）：
+        invoiceMain.setUploadStatus("待上傳");
+        String nowDateTime = getCurrentDateTime();
+        invoiceMain.setEditRecord(new EditRecord(nowDateTime, nowDateTime, user.getId()));
+
+        return invoiceMain;
+    }
+
+
+    public List<InvoiceDetail> generateInvoiceDetail(InvoiceMainDto invoiceMainDto, Long invoiceMainId, String invoiceNumber) {
+        List<InvoiceDetail> invoiceDetailList = new ArrayList<InvoiceDetail>();
+
+        List<InvoiceDetailDto> invoiceDetailDtoList = invoiceMainDto.getInvoiceDetailDtoList();
+        for (InvoiceDetailDto invoiceDetailDto : invoiceDetailDtoList) {
+            InvoiceDetail invoiceDetail = new InvoiceDetail();
+            invoiceDetail.setInvoiceDate(invoiceMainDto.getInvoiceDate());
+            invoiceDetail.setInvoiceMainId(invoiceMainId);
+            invoiceDetail.setInvoiceNumber(invoiceNumber);
+            invoiceDetail.setDescription(invoiceDetailDto.getDescription());
+            invoiceDetail.setQuantity(invoiceDetailDto.getQuantity());
+            invoiceDetail.setUnit(invoiceDetailDto.getUnit());
+            invoiceDetail.setUnitPrice(invoiceDetailDto.getUnitPrice());
+            invoiceDetail.setTaxType(invoiceDetailDto.getTaxType());
+            invoiceDetail.setSalesAmount(invoiceDetailDto.getSalesAmount());
+            invoiceDetail.setSequenceNumber(invoiceDetailDto.getSequenceNumber());
+            invoiceDetail.setRemark(invoiceDetailDto.getRemark());
+            invoiceDetail.setRelateNumber(invoiceDetailDto.getRelateNumber());
+
+            invoiceDetailList.add(invoiceDetail);
+        }
+        return invoiceDetailList;
+
+    }
+
 }
