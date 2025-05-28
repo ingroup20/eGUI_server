@@ -22,12 +22,10 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.ingroup.invoice_web.util.DateTimeUtil.getCurrentDateTime;
 import static com.ingroup.invoice_web.util.DateTimeUtil.getYearMonthROC;
 import static com.ingroup.invoice_web.util.constant.ErrorCodeEnum.*;
 import static com.ingroup.invoice_web.util.constant.TaxTypeEnum.*;
@@ -118,10 +116,10 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         try {
             //xml要傳到queue
-            xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList, company);
+            String xml = xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList, company);
 
             //queue接到後才鎖定發票號碼
-
+            System.out.println(xml);
         } catch (IOException e) {
             logger.error("產xml檔案異常");
         } catch (TemplateException e) {
@@ -138,7 +136,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         Company company = securityService.checkLoginCompany(user);
 
         //找到發票主黨...檢查已開立成功...檢查沒有折讓過....檢查沒註銷過...檢查沒刪除過....開立
-        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(canceledInvoiceDto.getInvoiceId()).orElseThrow(() -> new RuntimeException("發票上傳中"));
+        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(canceledInvoiceDto.getInvoiceId()).orElseThrow(() -> new RuntimeException("無此發票 或 發票上傳中"));
 
         if (invoiceMain.getAllowanceCount() != 0) {
             throw new RuntimeException("有折讓，不能作廢");
@@ -179,7 +177,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         Company company = securityService.checkLoginCompany(user);
 
         //找到發票主黨...檢查已開立成功...檢查沒有折讓過....檢查沒註銷過...檢查沒刪除過....開立
-        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(voidedInvoiceDto.getInvoiceId()).orElseThrow(() -> new RuntimeException("發票上傳中"));
+        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(voidedInvoiceDto.getInvoiceId()).orElseThrow(() -> new RuntimeException("無此發票 或 發票上傳中"));
 
         if (invoiceMain.getAllowanceCount() != 0) {
             throw new RuntimeException("有折讓，不能作廢");

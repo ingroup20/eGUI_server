@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface InvoiceMainRepository extends JpaRepository<InvoiceMain, Long> {
 
-    @Query(value = "SELECT * FROM invoice_main WHERE invoice_id = :invoiceId AND upload_status = 'C'", nativeQuery = true)
+    @Query(value = "SELECT * FROM invoice_main WHERE id = :invoiceId AND upload_status = 'C'", nativeQuery = true)
     Optional<InvoiceMain> findByInvoiceIdAndUploadDone(Long invoiceId);
 }

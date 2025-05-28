@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
     <Invoice xmlns="urn:GEINV:eInvoiceMessage:F0401:4.1">
-        <Main><!-- 主檔資料 -->
+        <Main>
             <InvoiceNumber>${invoiceMain.invoiceNumber}</InvoiceNumber>
             <InvoiceDate>${invoiceMain.invoiceDate}</InvoiceDate>
             <InvoiceTime>${invoiceMain.invoiceTime}</InvoiceTime>
@@ -68,13 +68,13 @@
                 <RelateNumber>${invoiceMain.relateNumber}</RelateNumber>
             </#if>
 
-            <InvoiceType>${invoiceMain.invoiceType}</InvoiceType>
+                <InvoiceType>${invoiceMain.invoiceType}</InvoiceType>
 
             <#if invoiceMain.groupMark??>
                 <GroupMark>${invoiceMain.groupMark}</GroupMark>
             </#if>
 
-            <DonateMark>${invoiceMain.donateMark}</DonateMark>
+                <DonateMark>${invoiceMain.donateMark}</DonateMark>
 
             <#if invoiceMain.carrierType??>
                 <CarrierType>${invoiceMain.carrierType}</CarrierType>
@@ -86,7 +86,7 @@
                 <CarrierId2>${invoiceMain.carrierId2}</CarrierId2>
             </#if>
 
-            <PrintMark>${invoiceMain.printMark}</PrintMark>
+                <PrintMark>${invoiceMain.printMark}</PrintMark>
 
             <#if invoiceMain.npoban??>
                 <NPOBAN>${invoiceMain.npoban}</NPOBAN>

@@ -28,16 +28,16 @@ public class InvoiceController {
     }
 
     @Operation(summary = "註銷單張發票")
-    @PostMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelInvoice(@PathVariable CanceledInvoiceDto canceledInvoiceDto) {
+    @PostMapping("/cancel")
+    public ResponseEntity<?> cancelInvoice(@RequestBody CanceledInvoiceDto canceledInvoiceDto) {
         invoiceService.cancelInvoice(canceledInvoiceDto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body("");
     };
 
     @Operation(summary = "作廢單張發票")
-    @PostMapping("/{id}/void")
-    public ResponseEntity<?> voidInvoice(@PathVariable VoidedInvoiceDto voidedInvoiceDto) {
+    @PostMapping("/void")
+    public ResponseEntity<?> voidInvoice(@RequestBody VoidedInvoiceDto voidedInvoiceDto) {
 
         invoiceService.voidInvoice(voidedInvoiceDto);
         return ResponseEntity.status(HttpStatus.CREATED).body("");
