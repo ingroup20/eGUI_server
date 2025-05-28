@@ -109,21 +109,21 @@
         </Main>
 
         <Details>
-            <#list invoiceDetailList as invoiceDetai>
-                <Description>${invoiceDetai.description}</Description>
-                <Quantity>${invoiceDetai.quantity}</Quantity>
-                <#if invoiceDetai.unit??>
-                    <Unit>${invoiceDetai.unit}</Unit>
+            <#list invoiceDetailList as invoiceDetail>
+                <Description>${invoiceDetail.description}</Description>
+                <Quantity>${invoiceDetail.quantity}</Quantity>
+                <#if invoiceDetail.unit??>
+                    <Unit>${invoiceDetail.unit}</Unit>
                 </#if>
-                <UnitPrice>${invoiceDetai.unitPrice}</UnitPrice>
-                <TaxType>${invoiceDetai.taxType}</TaxType>
-                <Amount>${invoiceDetai.amount}</Amount>
-                <SequenceNumber>${invoiceDetai.sequenceNumber}</SequenceNumber>
-                <#if invoiceDetai.remark??>
-                    <Remark>${invoiceDetai.remark}</Remark>
+                <UnitPrice>${invoiceDetail.unitPrice}</UnitPrice>
+                <TaxType>${invoiceDetail.taxType}</TaxType>
+                <Amount>${invoiceDetail.amount}</Amount>
+                <SequenceNumber>${invoiceDetail.sequenceNumber}</SequenceNumber>
+                <#if invoiceDetail.remark??>
+                    <Remark>${invoiceDetail.remark}</Remark>
                 </#if>
-                <#if invoiceDetai.relateNumber??>
-                    <RelateNumber>${invoiceDetai.relateNumber}</RelateNumber>
+                <#if invoiceDetail.relateNumber??>
+                    <RelateNumber>${invoiceDetail.relateNumber}</RelateNumber>
                 </#if>
             </#list>
         </Details>

@@ -111,7 +111,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             }
         } while (assignGroup == null);
 
-
+        //fixme 還沒考量交換發票
         logger.info("issueInvoice invoice number: {}, yearMonth: {}, invoice date: {}", invoiceNumber, yearMonth, invoiceMainDto.getInvoiceDate());
         InvoiceMain invoiceMain = invoiceMainDto.generateInvoiceMain(invoiceMainDto, yearMonth, invoiceNumber, company, user, randomNumber); //小心方法呼叫
         invoiceMain = invoiceMainRepository.save(invoiceMain);
