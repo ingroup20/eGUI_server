@@ -18,6 +18,7 @@ public class AllowanceMain {
     private BigDecimal taxAmount;
     private BigDecimal totalAmount;
 
+    private String migType; //上傳migType
     private String uploadStatus; //上傳狀態
 
     @Embedded

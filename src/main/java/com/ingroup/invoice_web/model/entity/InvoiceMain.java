@@ -56,6 +56,7 @@ public class InvoiceMain {
     private BigDecimal invoiceBalance;
     private BigDecimal taxBalance;
 
+    private String migType; //上傳migType
     private String uploadStatus; //上傳狀態
 
     @Embedded
@@ -227,5 +228,177 @@ public class InvoiceMain {
 
     public void setEditRecord(EditRecord editRecord) {
         this.editRecord = editRecord;
+    }
+
+    public String getYearMonth() {
+        return yearMonth;
+    }
+
+    public String getInvoiceNumber() {
+        return invoiceNumber;
+    }
+
+    public LocalDate getInvoiceDate() {
+        return invoiceDate;
+    }
+
+    public LocalTime getInvoiceTime() {
+        return invoiceTime;
+    }
+
+    public String getSeller() {
+        return seller;
+    }
+
+    public Buyer getBuyer() {
+        return buyer;
+    }
+
+    public String getBuyerRemark() {
+        return buyerRemark;
+    }
+
+    public String getMainRemark() {
+        return mainRemark;
+    }
+
+    public String getCustomsClearanceMark() {
+        return customsClearanceMark;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public String getRelateNumber() {
+        return relateNumber;
+    }
+
+    public String getInvoiceType() {
+        return invoiceType;
+    }
+
+    public String getGroupMark() {
+        return groupMark;
+    }
+
+    public String getDonateMark() {
+        return donateMark;
+    }
+
+    public String getCarrierType() {
+        return carrierType;
+    }
+
+    public String getCarrierId1() {
+        return carrierId1;
+    }
+
+    public String getCarrierId2() {
+        return carrierId2;
+    }
+
+    public String getPrintMark() {
+        return printMark;
+    }
+
+    public String getNpoban() {
+        return npoban;
+    }
+
+    public String getRandomNumber() {
+        return randomNumber;
+    }
+
+    public Boolean getBondedAreaConfirm() {
+        return bondedAreaConfirm;
+    }
+
+    public String getZeroTaxRateReason() {
+        return zeroTaxRateReason;
+    }
+
+    public String getReserved1() {
+        return reserved1;
+    }
+
+    public String getReserved2() {
+        return reserved2;
+    }
+
+    public BigDecimal getSalesAmount() {
+        return salesAmount;
+    }
+
+    public BigDecimal getFreeTaxSalesAmount() {
+        return freeTaxSalesAmount;
+    }
+
+    public BigDecimal getZeroTaxSalesAmount() {
+        return zeroTaxSalesAmount;
+    }
+
+    public String getTaxType() {
+        return taxType;
+    }
+
+    public BigDecimal getTaxRate() {
+        return taxRate;
+    }
+
+    public BigDecimal getTaxAmount() {
+        return taxAmount;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public BigDecimal getOriginalCurrencyAmount() {
+        return originalCurrencyAmount;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public Integer getAllowanceCount() {
+        return allowanceCount;
+    }
+
+    public BigDecimal getTotalAllowanceAmount() {
+        return totalAllowanceAmount;
+    }
+
+    public BigDecimal getInvoiceBalance() {
+        return invoiceBalance;
+    }
+
+    public BigDecimal getTaxBalance() {
+        return taxBalance;
+    }
+
+    public String getMigType() {
+        return migType;
+    }
+
+    public void setMigType(String migType) {
+        this.migType = migType;
+    }
+
+    public String getUploadStatus() {
+        return uploadStatus;
+    }
+
+    public EditRecord getEditRecord() {
+        return editRecord;
     }
 }

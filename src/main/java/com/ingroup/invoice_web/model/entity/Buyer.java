@@ -2,12 +2,9 @@ package com.ingroup.invoice_web.model.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
 
 @Embeddable
 public class Buyer {
-
 
     @Column(name = "buyer_identifier")
     private String identifier; //識別碼(統一編號)
@@ -38,4 +35,39 @@ public class Buyer {
     @Column(name = "buyer_role_remark")
     private String roleRemark; //營業人角色註記
 
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getPersonInCharge() {
+        return personInCharge;
+    }
+
+    public String getTelephoneNumber() {
+        return telephoneNumber;
+    }
+
+    public String getFacsimileNumber() {
+        return facsimileNumber;
+    }
+
+    public String getEmailAddress() {
+        return emailAddress;
+    }
+
+    public String getCustomerNumber() {
+        return customerNumber;
+    }
+
+    public String getRoleRemark() {
+        return roleRemark;
+    }
 }

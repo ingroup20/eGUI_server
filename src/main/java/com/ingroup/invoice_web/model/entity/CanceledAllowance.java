@@ -7,7 +7,7 @@ import java.time.LocalTime;
 
 public class CanceledAllowance {
     private Long id;
-    private Integer allowanceId;
+    private Long allowanceId;
     private String cancelAllowanceNumber;
     private LocalDate allowanceDate;
     private String buyerId;
