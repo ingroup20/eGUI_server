@@ -341,6 +341,7 @@ public class InvoiceMainDto {
 
         // 補充欄位（如有需要）：
         invoiceMain.setUploadStatus("待上傳");
+        invoiceMain.setProcessStatus("新開立發票");
         invoiceMain.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), user.getId()));
 
         return invoiceMain;

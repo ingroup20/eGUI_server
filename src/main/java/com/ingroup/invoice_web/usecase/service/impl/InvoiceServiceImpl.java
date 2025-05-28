@@ -9,8 +9,10 @@ import com.ingroup.invoice_web.exception.KeyOnLockException;
 import com.ingroup.invoice_web.exception.UsedUpAssignException;
 import com.ingroup.invoice_web.exception.ValidatedException;
 import com.ingroup.invoice_web.model.entity.*;
+import com.ingroup.invoice_web.model.repository.CanceledInvoiceRepository;
 import com.ingroup.invoice_web.model.repository.InvoiceDetailRepository;
 import com.ingroup.invoice_web.model.repository.InvoiceMainRepository;
+import com.ingroup.invoice_web.model.repository.VoidedInvoiceRepository;
 import com.ingroup.invoice_web.usecase.service.*;
 import freemarker.template.TemplateException;
 import org.slf4j.Logger;
@@ -37,6 +39,8 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final AssignGroupService assignGroupService;
     private final InvoiceMainRepository invoiceMainRepository;
     private final InvoiceDetailRepository invoiceDetailRepository;
+    private final CanceledInvoiceRepository canceledInvoiceRepository;
+    private final VoidedInvoiceRepository voidedInvoiceRepository;
     private final XmlGeneratorService xmlGeneratorService;
     private final SecurityService securityService;
     private final RedisLockService redisLockService;
@@ -46,17 +50,22 @@ public class InvoiceServiceImpl implements InvoiceService {
     InvoiceServiceImpl(AssignGroupService assignGroupService,
                        InvoiceMainRepository invoiceMainRepository,
                        InvoiceDetailRepository invoiceDetailRepository,
+                       CanceledInvoiceRepository canceledInvoiceRepository,
+                       VoidedInvoiceRepository voidedInvoiceRepository,
                        XmlGeneratorService xmlGeneratorService,
                        SecurityService securityService,
                        RedisLockService redisLockService) {
         this.assignGroupService = assignGroupService;
         this.invoiceMainRepository = invoiceMainRepository;
         this.invoiceDetailRepository = invoiceDetailRepository;
+        this.canceledInvoiceRepository = canceledInvoiceRepository;
+        this.voidedInvoiceRepository = voidedInvoiceRepository;
         this.xmlGeneratorService = xmlGeneratorService;
         this.securityService = securityService;
         this.redisLockService = redisLockService;
     }
 
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public String issueInvoice(InvoiceMainDto invoiceMainDto) throws IssueInvoiceException {
         UserAccount user = securityService.checkLoginUser();
@@ -131,6 +140,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void cancelInvoice(CanceledInvoiceDto canceledInvoiceDto) {
         UserAccount user = securityService.checkLoginUser();
         Company company = securityService.checkLoginCompany(user);
@@ -158,6 +168,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         canceledInvoice.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), user.getId()));
 
+        canceledInvoiceRepository.save(canceledInvoice);
+
         if (invoiceMain.getMigType().equals(canceledInvoiceDto.getSourceMigType())) {
             try {
                 //xml要傳到queue
@@ -172,6 +184,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void voidInvoice(VoidedInvoiceDto voidedInvoiceDto) {
         UserAccount user = securityService.checkLoginUser();
         Company company = securityService.checkLoginCompany(user);
@@ -196,6 +209,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         voidedInvoice.setReserved1(voidedInvoiceDto.getReserved1());
         voidedInvoice.setReserved2(voidedInvoiceDto.getReserved2());
         voidedInvoice.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), user.getId()));
+
+        voidedInvoiceRepository.save(voidedInvoice);
 
         try {
             //xml要傳到queue

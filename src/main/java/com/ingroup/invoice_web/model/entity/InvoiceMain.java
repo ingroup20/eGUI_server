@@ -58,6 +58,7 @@ public class InvoiceMain {
 
     private String migType; //上傳migType
     private String uploadStatus; //上傳狀態
+    private String processStatus;
 
     @Embedded
     private EditRecord editRecord;
@@ -400,5 +401,13 @@ public class InvoiceMain {
 
     public EditRecord getEditRecord() {
         return editRecord;
+    }
+
+    public String getProcessStatus() {
+        return processStatus;
+    }
+
+    public void setProcessStatus(String processStatus) {
+        this.processStatus = processStatus;
     }
 }
