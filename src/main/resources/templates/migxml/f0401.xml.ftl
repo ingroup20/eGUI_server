@@ -8,118 +8,145 @@
                 <Identifier>${seller.identifier}</Identifier>
                 <Name>${seller.name}</Name>
                 <Address>${seller.address}</Address>
-                <PersonInCharge>${seller.personInCharge}</PersonInCharge>
-                <TelephoneNumber>${seller.telephoneNumber}</TelephoneNumber>
-                <FacsimileNumber>${seller.facsimileNumber}</FacsimileNumber>
-                <EmailAddress>${seller.emailAddress}</EmailAddress>
-                <CustomerNumber>${seller.customerNumber}</CustomerNumber>
+                <#if seller.personInCharge??>
+                    <PersonInCharge>${seller.personInCharge}</PersonInCharge>
+                </#if>
+                <#if seller.telephoneNumber??>
+                    <TelephoneNumber>${seller.telephoneNumber}</TelephoneNumber>
+                </#if>
+                <#if seller.facsimileNumber??>
+                    <FacsimileNumber>${seller.facsimileNumber}</FacsimileNumber>
+                </#if>
+                <#if seller.emailAddress??>
+                    <EmailAddress>${seller.emailAddress}</EmailAddress>
+                </#if>
+                <#if seller.customerNumber??>
+                    <CustomerNumber>${seller.customerNumber}</CustomerNumber>
+                </#if>
+                <#if seller.roleRemark??>
                 <RoleRemark>${seller.roleRemark}</RoleRemark>
+                </#if>
             </Seller>
             <Buyer>
                 <Identifier>${invoiceMain.buyer.identifier}</Identifier>
                 <Name>${invoiceMain.buyer.name}</Name>
-                <Address>${invoiceMain.buyer.address}</Address>
-                <PersonInCharge>${invoiceMain.buyer.personInCharge}</PersonInCharge>
-                <TelephoneNumber>${invoiceMain.buyer.telephoneNumber}</TelephoneNumber>
-                <FacsimileNumber>${invoiceMain.buyer.facsimileNumber}</FacsimileNumber>
-                <EmailAddress>${invoiceMain.buyer.emailAddress}</EmailAddress>
-                <CustomerNumber>${invoiceMain.buyer.customerNumber}</CustomerNumber>
-                <RoleRemark>${invoiceMain.buyer.roleRemark}</RoleRemark>
+                <#if invoiceMain.buyer.address??>
+                    <Address>${invoiceMain.buyer.address}</Address>
+                </#if>
+                <#if invoiceMain.buyer.personInCharge??>
+                    <PersonInCharge>${invoiceMain.buyer.personInCharge}</PersonInCharge>
+                </#if>
+                <#if invoiceMain.buyer.telephoneNumber??>
+                    <TelephoneNumber>${invoiceMain.buyer.telephoneNumber}</TelephoneNumber>
+                </#if>
+                <#if invoiceMain.buyer.facsimileNumber??>
+                   <FacsimileNumber>${invoiceMain.buyer.facsimileNumber}</FacsimileNumber>
+                </#if>
+                <#if invoiceMain.buyer.emailAddress??>
+                    <EmailAddress>${invoiceMain.buyer.emailAddress}</EmailAddress>
+                </#if>
+                <#if invoiceMain.buyer.customerNumber??>
+                    <CustomerNumber>${invoiceMain.buyer.customerNumber}</CustomerNumber>
+                </#if>
+                <#if invoiceMain.buyer.roleRemark??>
+                    <RoleRemark>${invoiceMain.buyer.roleRemark}</RoleRemark>
+                </#if>
             </Buyer>
-            <#if invoiceMain.BuyerRemark??>
-                <BuyerRemark>${invoiceMain.BuyerRemark}</BuyerRemark>
+            <#if invoiceMain.buyerRemark??>
+                <BuyerRemark>${invoiceMain.buyerRemark}</BuyerRemark>
             </#if>
-            <#if invoiceMain.MainRemark??>
-                <MainRemark>${invoiceMain.MainRemark}</MainRemark>
+            <#if invoiceMain.mainRemark??>
+                <MainRemark>${invoiceMain.mainRemark}</MainRemark>
             </#if>
-            <#if invoiceMain.CustomsClearanceMark??>
-                <CustomsClearanceMark>${invoiceMain.CustomsClearanceMark}</CustomsClearanceMark>
+            <#if invoiceMain.customsClearanceMark??>
+                <CustomsClearanceMark>${invoiceMain.customsClearanceMark}</CustomsClearanceMark>
             </#if>
-            <#if invoiceMain.Category??>
-                <Category>${invoiceMain.Category}</Category>
+            <#if invoiceMain.category??>
+                <Category>${invoiceMain.category}</Category>
             </#if>
-            <#if invoiceMain.RelateNumber??>
-                <RelateNumber>${invoiceMain.RelateNumber}</RelateNumber>
-            </#if>
-
-            <InvoiceType>${invoiceMain.InvoiceType}</InvoiceType>
-
-            <#if invoiceMain.GroupMark??>
-                <GroupMark>${invoiceMain.GroupMark}</GroupMark>
+            <#if invoiceMain.relateNumber??>
+                <RelateNumber>${invoiceMain.relateNumber}</RelateNumber>
             </#if>
 
-            <DonateMark>${invoiceMain.DonateMarkumber}</DonateMark>
+            <InvoiceType>${invoiceMain.invoiceType}</InvoiceType>
 
-            <#if invoiceMain.CarrierType??>
-                <CarrierType>${invoiceMain.CarrierType}</CarrierType>
-            </#if>
-            <#if invoiceMain.CarrierId1??>
-                <CarrierId1>${invoiceMain.CarrierId1}</CarrierId1>
-            </#if>
-            <#if invoiceMain.CarrierId2??>
-                <CarrierId2>${invoiceMain.CarrierId2}</CarrierId2>
+            <#if invoiceMain.groupMark??>
+                <GroupMark>${invoiceMain.groupMark}</GroupMark>
             </#if>
 
-            <PrintMark>${invoiceMain.PrintMark}</PrintMark>
+            <DonateMark>${invoiceMain.donateMark}</DonateMark>
 
-            <#if invoiceMain.NPOBAN??>
-                <NPOBAN>${invoiceMain.NPOBAN}</NPOBAN>
+            <#if invoiceMain.carrierType??>
+                <CarrierType>${invoiceMain.carrierType}</CarrierType>
             </#if>
-            <#if invoiceMain.RandomNumber??>
-                <RandomNumber>${invoiceMain.RandomNumber}</RandomNumber>
+            <#if invoiceMain.carrierId1??>
+                <CarrierId1>${invoiceMain.carrierId1}</CarrierId1>
             </#if>
-            <#if invoiceMain.BondedAreaConfirm??>
-                <BondedAreaConfirm>${invoiceMain.BondedAreaConfirm}</BondedAreaConfirm>
+            <#if invoiceMain.carrierId2??>
+                <CarrierId2>${invoiceMain.carrierId2}</CarrierId2>
             </#if>
-            <#if invoiceMain.ZeroTaxRateReason??>
-                <ZeroTaxRateReason>${invoiceMain.ZeroTaxRateReason}</ZeroTaxRateReason>
+
+            <PrintMark>${invoiceMain.printMark}</PrintMark>
+
+            <#if invoiceMain.npoban??>
+                <NPOBAN>${invoiceMain.npoban}</NPOBAN>
             </#if>
-            <#if invoiceMain.Reserved1??>
-                <Reserved1>${invoiceMain.Reserved1}</Reserved1>
+            <#if invoiceMain.randomNumber??>
+                <RandomNumber>${invoiceMain.randomNumber}</RandomNumber>
             </#if>
-            <#if invoiceMain.Reserved2??>
-                <Reserved2>${invoiceMain.Reserved2}</Reserved2>
+            <#if invoiceMain.bondedAreaConfirm??>
+                <BondedAreaConfirm>${invoiceMain.bondedAreaConfirm}</BondedAreaConfirm>
+            </#if>
+            <#if invoiceMain.zeroTaxRateReason??>
+                <ZeroTaxRateReason>${invoiceMain.zeroTaxRateReason}</ZeroTaxRateReason>
+            </#if>
+            <#if invoiceMain.reserved1??>
+                <Reserved1>${invoiceMain.reserved1}</Reserved1>
+            </#if>
+            <#if invoiceMain.reserved2??>
+                <Reserved2>${invoiceMain.reserved2}</Reserved2>
             </#if>
         </Main>
 
         <Details>
             <#list invoiceDetailList as invoiceDetai>
-                <Description>${invoiceDetai.Description}</Description>
-                <Quantity>${invoiceDetai.Quantity}</Quantity>
-                <#if invoiceDetai.Unit??>
-                    <Unit>${invoiceDetai.Unit}</Unit>
+                <Description>${invoiceDetai.description}</Description>
+                <Quantity>${invoiceDetai.quantity}</Quantity>
+                <#if invoiceDetai.unit??>
+                    <Unit>${invoiceDetai.unit}</Unit>
                 </#if>
-                <UnitPrice>${invoiceDetai.UnitPrice}</UnitPrice>
-                <Amount>${invoiceDetai.Amount}</Amount>
-                <SequenceNumber>${invoiceDetai.SequenceNumber}</SequenceNumber>
-                <#if invoiceDetai.Remark??>
-                    <Remark>${invoiceDetai.Remark}</Remark>
+                <UnitPrice>${invoiceDetai.unitPrice}</UnitPrice>
+                <TaxType>${invoiceDetai.taxType}</TaxType>
+                <Amount>${invoiceDetai.amount}</Amount>
+                <SequenceNumber>${invoiceDetai.sequenceNumber}</SequenceNumber>
+                <#if invoiceDetai.remark??>
+                    <Remark>${invoiceDetai.remark}</Remark>
                 </#if>
-                <#if invoiceDetai.RelateNumber??>
-                    <RelateNumber>${invoiceDetai.RelateNumber}</RelateNumber>
+                <#if invoiceDetai.relateNumber??>
+                    <RelateNumber>${invoiceDetai.relateNumber}</RelateNumber>
                 </#if>
             </#list>
         </Details>
 
         <Amount>
-            <SalesAmount>${invoiceMain.SalesAmount}</SalesAmount>
-            <FreeTaxSalesAmount>${invoiceMain.FreeTaxSalesAmount}</FreeTaxSalesAmount>
-            <ZeroTaxSalesAmount>${invoiceMain.ZeroTaxSalesAmount}</ZeroTaxSalesAmount>
-            <TaxType>${invoiceMain.TaxType}</TaxType>
-            <TaxRate>${invoiceMain.TaxRate}</TaxRate>
-            <TaxAmount>${invoiceMain.TaxAmount}</TaxAmount>
-
-            <#if invoiceMain.DiscountAmount??>
-                <DiscountAmount>${invoiceMain.DiscountAmount}</DiscountAmount>
+            <SalesAmount>${invoiceMain.salesAmount}</SalesAmount>
+            <FreeTaxSalesAmount>${invoiceMain.freeTaxSalesAmount}</FreeTaxSalesAmount>
+            <ZeroTaxSalesAmount>${invoiceMain.zeroTaxSalesAmount}</ZeroTaxSalesAmount>
+            <TaxType>${invoiceMain.taxType}</TaxType>
+            <TaxRate>${invoiceMain.taxRate}</TaxRate>
+            <TaxAmount>${invoiceMain.taxAmount}</TaxAmount>
+            <TotalAmount>${invoiceMain.totalAmount}</TotalAmount>
+            <#if invoiceMain.discountAmount??>
+                <DiscountAmount>${invoiceMain.discountAmount}</DiscountAmount>
             </#if>
-            <#if invoiceMain.OriginalCurrencyAmount??>
-                <OriginalCurrencyAmount>${invoiceMain.OriginalCurrencyAmount}</OriginalCurrencyAmount>
+            <#if invoiceMain.originalCurrencyAmount??>
+                <OriginalCurrencyAmount>${invoiceMain.originalCurrencyAmount}</OriginalCurrencyAmount>
             </#if>
-            <#if invoiceMain.ExchangeRate??>
-                <ExchangeRate>${invoiceMain.ExchangeRate}</ExchangeRate>
+            <#if invoiceMain.exchangeRate??>
+                <ExchangeRate>${invoiceMain.exchangeRate}</ExchangeRate>
             </#if>
-            <#if invoiceMain.Currency??>
-                <Currency>${invoiceMain.Currency}</Currency>
+            <#if invoiceMain.currency??>
+                <Currency>${invoiceMain.currency}</Currency>
             </#if>
         </Amount>
     </Invoice>

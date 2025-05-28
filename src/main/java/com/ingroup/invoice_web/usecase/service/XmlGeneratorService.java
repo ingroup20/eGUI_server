@@ -1,9 +1,6 @@
 package com.ingroup.invoice_web.usecase.service;
 
-import com.ingroup.invoice_web.model.entity.CanceledInvoice;
-import com.ingroup.invoice_web.model.entity.InvoiceDetail;
-import com.ingroup.invoice_web.model.entity.InvoiceMain;
-import com.ingroup.invoice_web.model.entity.VoidedInvoice;
+import com.ingroup.invoice_web.model.entity.*;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import org.springframework.stereotype.Service;
@@ -26,10 +23,11 @@ public class XmlGeneratorService {
         this.freemarkerConfig = freemarkerConfig;
     }
 
-    public String generateInvoiceXML(InvoiceMain invoiceMain, List<InvoiceDetail> invoiceDetailList) throws IOException, TemplateException {
+    public String generateInvoiceXML(InvoiceMain invoiceMain, List<InvoiceDetail> invoiceDetailList, Company company) throws IOException, TemplateException {
         // 準備資料模型
         Map<String, Object> model = new HashMap<>();
         model.put("invoiceMain", invoiceMain);
+        model.put("seller", company);
         model.put("invoiceDetailList", invoiceDetailList);
 
         // 載入模板
@@ -43,7 +41,7 @@ public class XmlGeneratorService {
     }
 
 
-    public String generateCanceledInvoiceXML(CanceledInvoice canceledInvoice,String SourceMigType) throws IOException, TemplateException {
+    public String generateCanceledInvoiceXML(CanceledInvoice canceledInvoice, String SourceMigType) throws IOException, TemplateException {
         Map<String, Object> model = new HashMap<>();
         model.put("canceledInvoice", canceledInvoice);
         String templatePath;
@@ -64,10 +62,11 @@ public class XmlGeneratorService {
         return writer.toString(); // 可改成輸出成檔案
     }
 
-    public String  generateVoidedInvoiceXML(VoidedInvoice voidedInvoice) throws IOException, TemplateException {
+    public String generateVoidedInvoiceXML(VoidedInvoice voidedInvoice) throws IOException, TemplateException {
         Map<String, Object> model = new HashMap<>();
         model.put("voidedInvoice", voidedInvoice);
-        String templatePath =  "migxml/f0701.xml.ftl";;
+        String templatePath = "migxml/f0701.xml.ftl";
+        ;
         Template template = freemarkerConfig.getTemplate(templatePath);
 
         StringWriter writer = new StringWriter();

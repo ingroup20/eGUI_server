@@ -3,31 +3,33 @@ package com.ingroup.invoice_web.model.entity;
 
 import jakarta.persistence.Embeddable;
 
+import java.time.LocalDateTime;
+
 @Embeddable
 public class EditRecord {
-    private String createDate;
-    private String modifyDate;
+    private LocalDateTime  createDate;
+    private LocalDateTime modifyDate;
     private Integer modifyUserId;
 
     public EditRecord() {
     }
 
-    public EditRecord(String createDate, String modifyDate, Integer modifyUserId) {
+    public EditRecord(LocalDateTime  createDate, LocalDateTime  modifyDate, Integer modifyUserId) {
         this.createDate = createDate;
         this.modifyDate = modifyDate;
         this.modifyUserId = modifyUserId;
     }
 
-    public EditRecord(String modifyDate, Integer modifyUserId) {
+    public EditRecord(LocalDateTime  modifyDate, Integer modifyUserId) {
         this.modifyDate = modifyDate;
         this.modifyUserId = modifyUserId;
     }
 
-    public void setCreateDate(String createDate) {
+    public void setCreateDate(LocalDateTime  createDate) {
         this.createDate = createDate;
     }
 
-    public void setModifyDate(String modifyDate) {
+    public void setModifyDate(LocalDateTime  modifyDate) {
         this.modifyDate = modifyDate;
     }
 

@@ -57,7 +57,8 @@ public class AssignGroupServiceImpl implements AssignGroupService {
                 if(assignGroup.getLastUsedNo() == null){
                     assignNo = assignGroup.getStartNo();
                 }else {
-                    assignNo = assignGroup.getLastUsedNo().substring(0, 8) +1;
+                    int nextNo =Integer.valueOf(assignGroup.getLastUsedNo()) + 1;
+                    assignNo = String.format("%08d",nextNo);
                 }
                 assignGroup.setLastUsedNo(assignNo);
                 assignGroup.setUsedCount(assignGroup.getUsedCount() + 1);

@@ -8,19 +8,19 @@ public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer companyId;
-
     private String identifier; //識別碼(統一編號)
     private String name;
+    private String address;
     private String personInCharge; //負責人姓名
     private String telephoneNumber;
     private String facsimileNumber; //傳真號碼
     private String emailAddress;
-    private String companyCode; //公司代號
+    private String customerNumber; //客戶編號 同mig規範
     private String roleRemark; //營業人角色註記
+    private String remark;
 
     @Embedded
     private EditRecord editRecord;
-
 
     public Integer getCompanyId() {
         return companyId;
@@ -40,6 +40,14 @@ public class Company {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getPersonInCharge() {
@@ -74,12 +82,12 @@ public class Company {
         this.emailAddress = emailAddress;
     }
 
-    public String getCompanyCode() {
-        return companyCode;
+    public String getCustomerNumber() {
+        return customerNumber;
     }
 
-    public void setCompanyCode(String companyCode) {
-        this.companyCode = companyCode;
+    public void setCustomerNumber(String customerNumber) {
+        this.customerNumber = customerNumber;
     }
 
     public String getRoleRemark() {
@@ -88,6 +96,14 @@ public class Company {
 
     public void setRoleRemark(String roleRemark) {
         this.roleRemark = roleRemark;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public EditRecord getEditRecord() {

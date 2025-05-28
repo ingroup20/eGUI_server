@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +31,9 @@ public class InvoiceMainDto {
     private String carrierType; //載具類別號碼
     private String carrierId1; //載具顯碼
     private String carrierId2; //載具隱碼
+    private String printMark; //電子發票證明聯已列印註記
     private String npoban; //發票捐贈對象
-    private Boolean bondedAreaConfirm; //買受人零稅率註記
+    private String bondedAreaConfirm; //買受人零稅率註記
     private String zeroTaxRateReason; //零稅率原因
 
     @NotNull
@@ -163,6 +165,14 @@ public class InvoiceMainDto {
         this.carrierId2 = carrierId2;
     }
 
+    public String getPrintMark() {
+        return printMark;
+    }
+
+    public void setPrintMark(String printMark) {
+        this.printMark = printMark;
+    }
+
     public String getNpoban() {
         return npoban;
     }
@@ -171,11 +181,11 @@ public class InvoiceMainDto {
         this.npoban = npoban;
     }
 
-    public Boolean getBondedAreaConfirm() {
+    public String getBondedAreaConfirm() {
         return bondedAreaConfirm;
     }
 
-    public void setBondedAreaConfirm(Boolean bondedAreaConfirm) {
+    public void setBondedAreaConfirm(String bondedAreaConfirm) {
         this.bondedAreaConfirm = bondedAreaConfirm;
     }
 
@@ -293,6 +303,7 @@ public class InvoiceMainDto {
         invoiceMain.setYearMonth(yearMonth);
         invoiceMain.setInvoiceNumber(invoiceNumber);
         invoiceMain.setInvoiceDate(invoiceMainDto.getInvoiceDate());
+        invoiceMain.setInvoiceTime(invoiceMainDto.getInvoiceTime());
         invoiceMain.setSeller(company.getIdentifier());
         invoiceMain.setBuyer(invoiceMainDto.getBuyer());
         invoiceMain.setBuyerRemark(invoiceMainDto.getBuyerRemark());
@@ -305,8 +316,9 @@ public class InvoiceMainDto {
         invoiceMain.setCarrierType(invoiceMainDto.getCarrierType());
         invoiceMain.setCarrierId1(invoiceMainDto.getCarrierId1());
         invoiceMain.setCarrierId2(invoiceMainDto.getCarrierId2());
+        invoiceMain.setPrintMark(invoiceMainDto.getPrintMark());
         invoiceMain.setNpoban(invoiceMainDto.getNpoban());
-        invoiceMain.setRandomNumber(randomNumber);//
+        invoiceMain.setRandomNumber(randomNumber);
         invoiceMain.setBondedAreaConfirm(invoiceMainDto.getBondedAreaConfirm());
         invoiceMain.setZeroTaxRateReason(invoiceMainDto.getZeroTaxRateReason());
 
@@ -329,8 +341,7 @@ public class InvoiceMainDto {
 
         // 補充欄位（如有需要）：
         invoiceMain.setUploadStatus("待上傳");
-        String nowDateTime = getCurrentDateTime();
-        invoiceMain.setEditRecord(new EditRecord(nowDateTime, nowDateTime, user.getId()));
+        invoiceMain.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), user.getId()));
 
         return invoiceMain;
     }
@@ -350,7 +361,7 @@ public class InvoiceMainDto {
             invoiceDetail.setUnit(invoiceDetailDto.getUnit());
             invoiceDetail.setUnitPrice(invoiceDetailDto.getUnitPrice());
             invoiceDetail.setTaxType(invoiceDetailDto.getTaxType());
-            invoiceDetail.setSalesAmount(invoiceDetailDto.getSalesAmount());
+            invoiceDetail.setAmount(invoiceDetailDto.getAmount());
             invoiceDetail.setSequenceNumber(invoiceDetailDto.getSequenceNumber());
             invoiceDetail.setRemark(invoiceDetailDto.getRemark());
             invoiceDetail.setRelateNumber(invoiceDetailDto.getRelateNumber());

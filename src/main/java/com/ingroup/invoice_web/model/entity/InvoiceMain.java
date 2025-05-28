@@ -34,7 +34,7 @@ public class InvoiceMain {
     private String npoban; //發票捐贈對象
 //    @pattern value="[0-9][0-9][0-9][0-9]|AAAA
     private String randomNumber; //防偽隨機碼
-    private Boolean bondedAreaConfirm; //買受人零稅率註記
+    private String bondedAreaConfirm; //買受人零稅率註記
     private String zeroTaxRateReason; //零稅率原因
     private String reserved1; //保留欄位
     private String reserved2; //保留欄位
@@ -146,7 +146,7 @@ public class InvoiceMain {
         this.randomNumber = randomNumber;
     }
 
-    public void setBondedAreaConfirm(Boolean bondedAreaConfirm) {
+    public void setBondedAreaConfirm(String bondedAreaConfirm) {
         this.bondedAreaConfirm = bondedAreaConfirm;
     }
 
@@ -310,7 +310,7 @@ public class InvoiceMain {
         return randomNumber;
     }
 
-    public Boolean getBondedAreaConfirm() {
+    public String getBondedAreaConfirm() {
         return bondedAreaConfirm;
     }
 

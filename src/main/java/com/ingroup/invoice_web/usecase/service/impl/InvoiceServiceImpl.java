@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -68,7 +69,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         String yearMonth = getYearMonthROC(invoiceMainDto.getInvoiceDate());
         String randomNumber = generateRandomNumber();
         calculateAmount(invoiceMainDto);
-        if(B2C_SALES_PRICE.equals(invoiceMainDto.getConditionType())) { //b2c售價含稅
+        if (B2C_SALES_PRICE.equals(invoiceMainDto.getConditionType())) { //b2c售價含稅
             calculateTax(invoiceMainDto);
         } //b2b定價不含稅
 
@@ -76,13 +77,19 @@ public class InvoiceServiceImpl implements InvoiceService {
         //取號
 
         do {
-            assignGroup = assignGroupService.getInUseAssign(yearMonth, company, printer)
-                    .orElseGet(() ->assignGroupService.getPerUseAssign(yearMonth, company, printer)
-                            .orElseGet(() -> assignGroupService.getAvailableAssign(yearMonth, company, printer)));
+            assignGroup = assignGroupService.getInUseAssign(yearMonth, company, printer).orElse(null);
+            if (assignGroup == null) {
+                assignGroup = assignGroupService.getPerUseAssign(yearMonth, company, printer).orElse(null);
+            }
+
+            if (assignGroup == null) {
+                assignGroup = assignGroupService.getAvailableAssign(yearMonth, company, printer);
+            }
+
             logger.info("assignGroup = {}", assignGroup);
             try {
                 invoiceNumber = assignGroupService.takeAssignNo(assignGroup);
-                if(redisLockService.checkLockKeyExists(invoiceNumber)){
+                if (redisLockService.checkLockKeyExists(invoiceNumber)) {
                     logger.error("the invoice number is locked , invoice number = {}", invoiceNumber);
                     throw new KeyOnLockException("error, the invoice number is locked"); //todo 通知前端
                 }
@@ -95,7 +102,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 logger.error("嚴重異常");
                 break;
             }
-        }while (assignGroup == null);
+        } while (assignGroup == null);
 
 
         logger.info("issueInvoice invoice number: {}, yearMonth: {}, invoice date: {}", invoiceNumber, yearMonth, invoiceMainDto.getInvoiceDate());
@@ -111,7 +118,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         try {
             //xml要傳到queue
-            xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList);
+            xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList, company);
 
             //queue接到後才鎖定發票號碼
 
@@ -131,9 +138,9 @@ public class InvoiceServiceImpl implements InvoiceService {
         Company company = securityService.checkLoginCompany(user);
 
         //找到發票主黨...檢查已開立成功...檢查沒有折讓過....檢查沒註銷過...檢查沒刪除過....開立
-        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(canceledInvoiceDto.getInvoiceId()).orElseThrow(()-> new RuntimeException("發票上傳中"));
+        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(canceledInvoiceDto.getInvoiceId()).orElseThrow(() -> new RuntimeException("發票上傳中"));
 
-        if(invoiceMain.getAllowanceCount() != 0 ){
+        if (invoiceMain.getAllowanceCount() != 0) {
             throw new RuntimeException("有折讓，不能作廢");
         }
 
@@ -150,10 +157,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         canceledInvoice.setRemark(canceledInvoiceDto.getRemark());
         canceledInvoice.setReserved1(canceledInvoiceDto.getReserved1());
         canceledInvoice.setReserved2(canceledInvoiceDto.getReserved2());
-        String nowDateTime = getCurrentDateTime();
-        canceledInvoice.setEditRecord(new EditRecord(nowDateTime,nowDateTime, user.getId()));
 
-        if(invoiceMain.getMigType().equals(canceledInvoiceDto.getSourceMigType())) {
+        canceledInvoice.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), user.getId()));
+
+        if (invoiceMain.getMigType().equals(canceledInvoiceDto.getSourceMigType())) {
             try {
                 //xml要傳到queue
                 xmlGeneratorService.generateCanceledInvoiceXML(canceledInvoice, canceledInvoiceDto.getSourceMigType());
@@ -172,9 +179,9 @@ public class InvoiceServiceImpl implements InvoiceService {
         Company company = securityService.checkLoginCompany(user);
 
         //找到發票主黨...檢查已開立成功...檢查沒有折讓過....檢查沒註銷過...檢查沒刪除過....開立
-        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(voidedInvoiceDto.getInvoiceId()).orElseThrow(()-> new RuntimeException("發票上傳中"));
+        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(voidedInvoiceDto.getInvoiceId()).orElseThrow(() -> new RuntimeException("發票上傳中"));
 
-        if(invoiceMain.getAllowanceCount() != 0 ){
+        if (invoiceMain.getAllowanceCount() != 0) {
             throw new RuntimeException("有折讓，不能作廢");
         }
 
@@ -190,8 +197,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         voidedInvoice.setRemark(voidedInvoiceDto.getRemark());
         voidedInvoice.setReserved1(voidedInvoiceDto.getReserved1());
         voidedInvoice.setReserved2(voidedInvoiceDto.getReserved2());
-        String nowDateTime = getCurrentDateTime();
-        voidedInvoice.setEditRecord(new EditRecord(nowDateTime,nowDateTime, user.getId()));
+        voidedInvoice.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), user.getId()));
 
         try {
             //xml要傳到queue
@@ -211,27 +217,28 @@ public class InvoiceServiceImpl implements InvoiceService {
         //總金額
         List<InvoiceDetailDto> detailList = invoiceMainDto.getInvoiceDetailDtoList();
         BigDecimal totalAmount = detailList.stream()
-                .map(InvoiceDetailDto::getSalesAmount)
+                .map(InvoiceDetailDto::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
 
         //應稅金額
         BigDecimal salesAmount = detailList.stream()
                 .filter(dt -> TAXABLE.getCode().equals(dt.getTaxType()))
-                .map(InvoiceDetailDto::getSalesAmount)
+                .map(InvoiceDetailDto::getAmount)
                 .filter(Objects::nonNull) //避免NullPointException
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         //免稅金額
         BigDecimal freeTaxSalesAmount = detailList.stream()
                 .filter(dt -> TAX_FREE.getCode().equals(dt.getTaxType()))
-                .map(InvoiceDetailDto::getSalesAmount)
+                .map(InvoiceDetailDto::getAmount)
                 .filter(Objects::nonNull) //避免NullPointException
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         //零稅率金額
         BigDecimal zeroTaxSalesAmount = detailList.stream()
                 .filter(dt -> ZERO_TAX.getCode().equals(dt.getTaxType()))
-                .map(InvoiceDetailDto::getSalesAmount)
+                .map(InvoiceDetailDto::getAmount)
                 .filter(Objects::nonNull) //避免NullPointException
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -243,7 +250,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         } else if (SPECIAL_TAX.getCode().equals(invoiceMainDto.getTaxType())) {
             salesAmount = detailList.stream()
                     .filter(dt -> SPECIAL_TAX.getCode().equals(dt.getTaxType()))
-                    .map(InvoiceDetailDto::getSalesAmount)
+                    .map(InvoiceDetailDto::getAmount)
                     .filter(Objects::nonNull) //避免NullPointException
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
         }

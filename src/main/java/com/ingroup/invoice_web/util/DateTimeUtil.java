@@ -23,9 +23,6 @@ public class DateTimeUtil {
     }
 
     public static String getYearMonthROC(LocalDate localDate){
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        localDate.format(formatter);
-
         String rocYear = String.valueOf(localDate.getYear() - 1911); // 轉民國年
         int month = localDate.getMonthValue();    // 取出月份
         int eGUIMonth = month % 2 == 0 ? month : month + 1; //期別月份只有偶數月

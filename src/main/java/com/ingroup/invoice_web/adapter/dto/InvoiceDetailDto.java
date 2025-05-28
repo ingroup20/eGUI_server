@@ -15,7 +15,7 @@ public class InvoiceDetailDto {
     @NotNull
     private String taxType; //課稅別
     @NotNull
-    private BigDecimal salesAmount; //銷售金額
+    private BigDecimal amount; //銷售金額
     @NotNull
     private Integer sequenceNumber; //明細序號
     private String remark; //註記
@@ -62,12 +62,12 @@ public class InvoiceDetailDto {
         this.taxType = taxType;
     }
 
-    public BigDecimal getSalesAmount() {
-        return salesAmount;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public void setSalesAmount(BigDecimal salesAmount) {
-        this.salesAmount = salesAmount;
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
     public Integer getSequenceNumber() {

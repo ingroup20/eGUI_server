@@ -19,7 +19,7 @@ public class InvoiceDetail {
     private String unit;
     private BigDecimal unitPrice;
     private String taxType; //課稅別
-    private BigDecimal salesAmount; //銷售金額
+    private BigDecimal amount; //銷售金額
     private Integer sequenceNumber; //明細序號
     private String remark; //註記
     private String relateNumber; //相關號碼
@@ -96,12 +96,12 @@ public class InvoiceDetail {
         this.taxType = taxType;
     }
 
-    public BigDecimal getSalesAmount() {
-        return salesAmount;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public void setSalesAmount(BigDecimal salesAmount) {
-        this.salesAmount = salesAmount;
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
     public Integer getSequenceNumber() {
