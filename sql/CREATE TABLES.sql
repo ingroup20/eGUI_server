@@ -69,6 +69,7 @@ CREATE TABLE invoice_main (
     tax_balance NUMERIC,
     mig_type VARCHAR,
     upload_status VARCHAR,
+    process_status VARCHAR,
     create_date TIMESTAMP,
     modify_date TIMESTAMP,
     modify_user_id INTEGER,
