@@ -2,7 +2,7 @@
 <Invoice xmlns="urn:GEINV:eInvoiceMessage:G0401:4.1">
     <Main>
         <AllowanceNumber>${allowanceMain.allowanceNumber}</AllowanceNumber>
-        <AllowanceDate>${allowanceMain.AllowanceDate}</AllowanceDate>
+        <AllowanceDate>${allowanceMain.allowanceDate}</AllowanceDate>
         <Seller>
             <Identifier>${seller.identifier}</Identifier>
             <Name>${seller.name}</Name>
@@ -70,14 +70,14 @@
                 <UnitPrice>${allowanceDetail.unitPrice}</UnitPrice>
                 <Amount>${allowanceDetail.amount}</Amount>
                 <Tax>${allowanceDetail.tax}</Tax>
-                <AllowanceSequenceNumber>${allowanceDetail.AllowanceSequenceNumber}</AllowanceSequenceNumber>
+                <AllowanceSequenceNumber>${allowanceDetail.allowanceSequenceNumber}</AllowanceSequenceNumber>
                 <TaxType>${allowanceDetail.taxType}</TaxType>
             </ProductItem>
         </#list>
     </Details>
 
     <Amount>
-        <TaxAmount>${allowanceMain.salesAmount}</TaxAmount>
-        <TotalAmount>${allowanceMain.freeTaxSalesAmount}</TotalAmount>
+        <TaxAmount>${allowanceMain.taxAmount}</TaxAmount>
+        <TotalAmount>${allowanceMain.totalAmount}</TotalAmount>
     </Amount>
 </Invoice>

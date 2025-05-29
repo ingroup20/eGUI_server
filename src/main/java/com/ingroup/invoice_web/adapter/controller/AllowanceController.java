@@ -23,6 +23,8 @@ public class AllowanceController {
     @Operation(summary="開立單張折讓")
     @PostMapping(value ="/issue")
     public ResponseEntity<String> issueAllowance(@RequestBody AllowanceMainDto allowanceMainDto){
+        //todo 前端驗證過的資料，最好再驗證一次(用ajax controller驗證)
+
         //規則上一張折讓單可以同時折(同個買/賣受人下)多張發票中的不同項目，但是我不準
         allowanceService.issueAllowance(allowanceMainDto);
         return ResponseEntity.status(HttpStatus.CREATED).body("");

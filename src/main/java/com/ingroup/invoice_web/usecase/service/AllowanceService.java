@@ -55,7 +55,7 @@ public class AllowanceService {
         BigDecimal invoiceBalance = originalInvoice.getInvoiceBalance();
         BigDecimal taxBalance = originalInvoice.getTaxBalance();
         if (!(invoiceBalance.compareTo(allowanceMainDto.getTotalAmount()) > 0)
-                && !(taxBalance.compareTo(allowanceMainDto.getTaxAmount()) > 0)) {
+                || !(taxBalance.compareTo(allowanceMainDto.getTaxAmount()) > 0)) {
             throw new RuntimeException("可折讓額度不足");
         }
 
@@ -63,7 +63,7 @@ public class AllowanceService {
         AllowanceMain allowanceMain = allowanceMainDto.generateAllowanceMain(allowanceMainDto, user, "憑證/交換"); //fixme
         allowanceMainRepository.save(allowanceMain);
 
-        Long allowanceId = allowanceMain.getId(); //不確定能這樣嗎
+        Long allowanceId = allowanceMain.getId();
         logger.info("allowance Id = {}", allowanceId);
         List<AllowanceDetail> allowanceDetailList;
         if (allowanceId != null) {
