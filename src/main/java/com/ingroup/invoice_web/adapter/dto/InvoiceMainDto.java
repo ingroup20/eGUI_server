@@ -35,7 +35,6 @@ public class InvoiceMainDto {
     private String npoban; //發票捐贈對象
     private String bondedAreaConfirm; //買受人零稅率註記
     private String zeroTaxRateReason; //零稅率原因
-    private String migType;
 
     @NotNull
     private List<InvoiceDetailDto> invoiceDetailDtoList;
@@ -58,8 +57,7 @@ public class InvoiceMainDto {
     private BigDecimal originalCurrencyAmount; //原幣金額
     private BigDecimal exchangeRate; //匯率
     private String currency; //幣別
-
-    private Integer conditionType; //條件種類
+    private String migType;
 
 
     public LocalDate getInvoiceDate() {
@@ -82,7 +80,7 @@ public class InvoiceMainDto {
         return buyer;
     }
 
-    public void setBuyer( Buyer buyer) {
+    public void setBuyer(Buyer buyer) {
         this.buyer = buyer;
     }
 
@@ -198,67 +196,67 @@ public class InvoiceMainDto {
         this.zeroTaxRateReason = zeroTaxRateReason;
     }
 
-    public  List<InvoiceDetailDto> getInvoiceDetailDtoList() {
+    public List<InvoiceDetailDto> getInvoiceDetailDtoList() {
         return invoiceDetailDtoList;
     }
 
-    public void setInvoiceDetailDtoList( List<InvoiceDetailDto> invoiceDetailDtoList) {
+    public void setInvoiceDetailDtoList(List<InvoiceDetailDto> invoiceDetailDtoList) {
         this.invoiceDetailDtoList = invoiceDetailDtoList;
     }
 
-    public  BigDecimal getSalesAmount() {
+    public BigDecimal getSalesAmount() {
         return salesAmount;
     }
 
-    public void setSalesAmount( BigDecimal salesAmount) {
+    public void setSalesAmount(BigDecimal salesAmount) {
         this.salesAmount = salesAmount;
     }
 
-    public  BigDecimal getFreeTaxSalesAmount() {
+    public BigDecimal getFreeTaxSalesAmount() {
         return freeTaxSalesAmount;
     }
 
-    public void setFreeTaxSalesAmount( BigDecimal freeTaxSalesAmount) {
+    public void setFreeTaxSalesAmount(BigDecimal freeTaxSalesAmount) {
         this.freeTaxSalesAmount = freeTaxSalesAmount;
     }
 
-    public  BigDecimal getZeroTaxSalesAmount() {
+    public BigDecimal getZeroTaxSalesAmount() {
         return zeroTaxSalesAmount;
     }
 
-    public void setZeroTaxSalesAmount( BigDecimal zeroTaxSalesAmount) {
+    public void setZeroTaxSalesAmount(BigDecimal zeroTaxSalesAmount) {
         this.zeroTaxSalesAmount = zeroTaxSalesAmount;
     }
 
-    public  String getTaxType() {
+    public String getTaxType() {
         return taxType;
     }
 
-    public void setTaxType( String taxType) {
+    public void setTaxType(String taxType) {
         this.taxType = taxType;
     }
 
-    public  BigDecimal getTaxRate() {
+    public BigDecimal getTaxRate() {
         return taxRate;
     }
 
-    public void setTaxRate( BigDecimal taxRate) {
+    public void setTaxRate(BigDecimal taxRate) {
         this.taxRate = taxRate;
     }
 
-    public  BigDecimal getTaxAmount() {
+    public BigDecimal getTaxAmount() {
         return taxAmount;
     }
 
-    public void setTaxAmount( BigDecimal taxAmount) {
+    public void setTaxAmount(BigDecimal taxAmount) {
         this.taxAmount = taxAmount;
     }
 
-    public  BigDecimal getTotalAmount() {
+    public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount( BigDecimal totalAmount) {
+    public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
     }
 
@@ -294,9 +292,6 @@ public class InvoiceMainDto {
         this.currency = currency;
     }
 
-    public Integer getConditionType() {
-        return conditionType;
-    }
 
     public String getMigType() {
         return migType;
@@ -308,6 +303,7 @@ public class InvoiceMainDto {
 
     public InvoiceMain generateInvoiceMain(InvoiceMainDto invoiceMainDto, String yearMonth, String invoiceNumber, Company company, UserAccount user, String randomNumber) throws ValidatedException {
         InvoiceMain invoiceMain = new InvoiceMain();
+        invoiceMain.setCompanyId(company.getCompanyId());
         invoiceMain.setYearMonth(yearMonth);
         invoiceMain.setInvoiceNumber(invoiceNumber);
         invoiceMain.setInvoiceDate(invoiceMainDto.getInvoiceDate());
@@ -344,24 +340,25 @@ public class InvoiceMainDto {
 
         invoiceMain.setAllowanceCount(0);
         invoiceMain.setTotalAllowanceAmount(new BigDecimal(BigInteger.ZERO));
-        invoiceMain.setInvoiceBalance(invoiceMainDto.getTotalAmount()); //
-        invoiceMain.setTaxBalance(invoiceMainDto.getTaxAmount()); //
+        invoiceMain.setInvoiceBalance(invoiceMainDto.getTotalAmount());
+        invoiceMain.setTaxBalance(invoiceMainDto.getTaxAmount());
 
-        // 補充欄位（如有需要）：
-        invoiceMain.setUploadStatus("待上傳");
-        invoiceMain.setProcessStatus("新開立發票");
+        invoiceMain.setMigType("A0401".equals(invoiceMainDto.getMigType()) ? "A0401" : "F0401");
+        invoiceMain.setUploadStatus("P");
+        invoiceMain.setProcessStatus("開立");
         invoiceMain.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), user.getId()));
 
         return invoiceMain;
     }
 
 
-    public List<InvoiceDetail> generateInvoiceDetail(InvoiceMainDto invoiceMainDto, Long invoiceMainId, String invoiceNumber) {
+    public List<InvoiceDetail> generateInvoiceDetail(InvoiceMainDto invoiceMainDto, UserAccount userAccount, Long invoiceMainId, String invoiceNumber) {
         List<InvoiceDetail> invoiceDetailList = new ArrayList<InvoiceDetail>();
 
         List<InvoiceDetailDto> invoiceDetailDtoList = invoiceMainDto.getInvoiceDetailDtoList();
         for (InvoiceDetailDto invoiceDetailDto : invoiceDetailDtoList) {
             InvoiceDetail invoiceDetail = new InvoiceDetail();
+            invoiceDetail.setCompanyId(userAccount.getCompanyId());
             invoiceDetail.setInvoiceDate(invoiceMainDto.getInvoiceDate());
             invoiceDetail.setInvoiceMainId(invoiceMainId);
             invoiceDetail.setInvoiceNumber(invoiceNumber);
@@ -374,7 +371,7 @@ public class InvoiceMainDto {
             invoiceDetail.setSequenceNumber(invoiceDetailDto.getSequenceNumber());
             invoiceDetail.setRemark(invoiceDetailDto.getRemark());
             invoiceDetail.setRelateNumber(invoiceDetailDto.getRelateNumber());
-
+            invoiceDetail.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), userAccount.getId()));
             invoiceDetailList.add(invoiceDetail);
         }
         return invoiceDetailList;

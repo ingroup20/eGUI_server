@@ -17,8 +17,8 @@ public class RedisLockService {
 
     private final RedissonClient redissonClient;
 
-    private final String INVOICE_KEY_WORLD = "i";
-    private final String ALLOWANCE_KEY_WORLD = "a";
+    private final String INVOICE_KEY_WORLD = "i:";
+    private final String ALLOWANCE_KEY_WORLD = "a:";
 
     public RedisLockService(RedissonClient redissonClient) {
         this.redissonClient = redissonClient;

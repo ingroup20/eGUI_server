@@ -1,6 +1,9 @@
 package com.ingroup.invoice_web.adapter.dto;
 
+import com.ingroup.invoice_web.model.entity.*;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public class VoidedInvoiceDto {
@@ -61,4 +64,20 @@ public class VoidedInvoiceDto {
         return reserved2;
     }
 
+    public VoidedInvoice generateVoidedInvoice(VoidedInvoiceDto voidedInvoiceDto, InvoiceMain invoiceMain, UserAccount userAccount) {
+        VoidedInvoice voidedInvoice = new VoidedInvoice();
+        voidedInvoice.setInvoiceId(voidedInvoiceDto.getInvoiceId());
+        voidedInvoice.setVoidInvoiceNumber(invoiceMain.getInvoiceNumber());
+        voidedInvoice.setInvoiceDate(invoiceMain.getInvoiceDate());
+        voidedInvoice.setBuyerId(invoiceMain.getBuyer().getIdentifier());
+        voidedInvoice.setSellerId(invoiceMain.getSeller());
+        voidedInvoice.setVoidDate(voidedInvoiceDto.getVoidDate());
+        voidedInvoice.setVoidTime(voidedInvoiceDto.getVoidTime());
+        voidedInvoice.setVoidReason(voidedInvoiceDto.getVoidReason());
+        voidedInvoice.setRemark(voidedInvoiceDto.getRemark());
+        voidedInvoice.setReserved1(voidedInvoiceDto.getReserved1());
+        voidedInvoice.setReserved2(voidedInvoiceDto.getReserved2());
+        voidedInvoice.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), userAccount.getId()));
+        return voidedInvoice;
+    }
 }

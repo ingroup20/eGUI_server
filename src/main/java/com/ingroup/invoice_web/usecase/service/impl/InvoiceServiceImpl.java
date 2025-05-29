@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -45,7 +44,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final SecurityService securityService;
     private final RedisLockService redisLockService;
 
-    private final Integer B2C_SALES_PRICE = 1;
+    private final String B2C_SALES_PRICE_TYPE = "C0401";
 
     InvoiceServiceImpl(AssignGroupService assignGroupService,
                        InvoiceMainRepository invoiceMainRepository,
@@ -76,7 +75,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         String yearMonth = getYearMonthROC(invoiceMainDto.getInvoiceDate());
         String randomNumber = generateRandomNumber();
         calculateAmount(invoiceMainDto);
-        if (B2C_SALES_PRICE.equals(invoiceMainDto.getConditionType())) { //b2c售價含稅
+        if (B2C_SALES_PRICE_TYPE.equals(invoiceMainDto.getMigType())) { //b2c售價含稅
             calculateTax(invoiceMainDto);
         } //b2b定價不含稅
 
@@ -96,11 +95,11 @@ public class InvoiceServiceImpl implements InvoiceService {
             logger.info("assignGroup = {}", assignGroup);
             try {
                 invoiceNumber = assignGroupService.takeAssignNo(assignGroup);
-                if (redisLockService.checkLockKeyExists(invoiceNumber,company,invoiceMainDto.getMigType())) {
+                if (redisLockService.checkLockKeyExists(invoiceNumber, company, invoiceMainDto.getMigType())) {
                     logger.error("the invoice number is locked , invoice number = {}", invoiceNumber);
                     throw new KeyOnLockException("error, the invoice number is locked"); //todo 通知前端
-                }else{
-                    redisLockService.issInvoiceNumberLock(invoiceNumber,company);
+                } else {
+                    redisLockService.issInvoiceNumberLock(invoiceNumber, company);
                 }
                 break;
             } catch (UsedUpAssignException e) {
@@ -108,7 +107,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 assignGroup = null;
                 continue;
             } catch (Exception e) {
-                logger.error("嚴重異常");
+                logger.error(e.getMessage());
                 break;
             }
         } while (assignGroup == null);
@@ -119,7 +118,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoiceMain = invoiceMainRepository.save(invoiceMain);
         logger.debug("save invoice_main id = {}", invoiceMain.getId());
 
-        List<InvoiceDetail> invoiceDetailList = invoiceMainDto.generateInvoiceDetail(invoiceMainDto, invoiceMain.getId(), invoiceNumber); //小心方法呼叫
+        List<InvoiceDetail> invoiceDetailList = invoiceMainDto.generateInvoiceDetail(invoiceMainDto, user, invoiceMain.getId(), invoiceNumber); //小心方法呼叫
         invoiceDetailRepository.saveAll(invoiceDetailList);
         logger.debug("save invoice_detail id = {}", invoiceDetailList.stream()
                 .map(InvoiceDetail::getId)
@@ -136,7 +135,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         } catch (TemplateException e) {
             logger.error("xml模板套用異常");
         }
-
+        logger.info("發票開立操作成功, InvoiceMain_id = {}", invoiceMain.getId());
         return invoiceNumber;
 
     }
@@ -148,28 +147,13 @@ public class InvoiceServiceImpl implements InvoiceService {
         Company company = securityService.checkLoginCompany(user);
 
         //找到發票主黨...檢查已開立成功...檢查沒有折讓過....檢查沒註銷過...檢查沒刪除過....開立
-        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(canceledInvoiceDto.getInvoiceId()).orElseThrow(() -> new RuntimeException("無此發票 或 發票上傳中"));
+        InvoiceMain invoiceMain = invoiceMainRepository.findByIdAndProcessStatusAndUploadStatus(canceledInvoiceDto.getInvoiceId(), "開立", "C").orElseThrow(() -> new RuntimeException("無此發票可操作 或 發票上傳中"));
 
         if (invoiceMain.getAllowanceCount() != 0) {
             throw new RuntimeException("有折讓，不能作廢");
         }
 
-        CanceledInvoice canceledInvoice = new CanceledInvoice();
-        canceledInvoice.setInvoiceId(canceledInvoiceDto.getInvoiceId());
-        canceledInvoice.setCancelInvoiceNumber(invoiceMain.getInvoiceNumber());
-        canceledInvoice.setInvoiceDate(invoiceMain.getInvoiceDate());
-        canceledInvoice.setBuyerId(invoiceMain.getBuyer().getIdentifier());
-        canceledInvoice.setSellerId(invoiceMain.getSeller());
-        canceledInvoice.setCancelDate(canceledInvoiceDto.getCancelDate());
-        canceledInvoice.setCancelTime(canceledInvoiceDto.getCancelTime());
-        canceledInvoice.setCancelReason(canceledInvoiceDto.getCancelReason());
-        canceledInvoice.setReturnTaxDocumentNumber(canceledInvoiceDto.getReturnTaxDocumentNumber());
-        canceledInvoice.setRemark(canceledInvoiceDto.getRemark());
-        canceledInvoice.setReserved1(canceledInvoiceDto.getReserved1());
-        canceledInvoice.setReserved2(canceledInvoiceDto.getReserved2());
-
-        canceledInvoice.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), user.getId()));
-
+        CanceledInvoice canceledInvoice = canceledInvoiceDto.generateCanceledInvoice(canceledInvoiceDto, invoiceMain, user);
         canceledInvoiceRepository.save(canceledInvoice);
 
         if (invoiceMain.getMigType().equals(canceledInvoiceDto.getSourceMigType())) {
@@ -183,6 +167,12 @@ public class InvoiceServiceImpl implements InvoiceService {
                 logger.error("xml模板套用異常");
             }
         }
+
+        //更新發票主檔
+        invoiceMain.setProcessStatus("作廢");
+        invoiceMain.setUploadStatus("P");
+        invoiceMainRepository.save(invoiceMain);
+        logger.info("發票作廢操作成功, CanceledInvoice_id = {}", canceledInvoice.getId());
     }
 
     @Override
@@ -192,26 +182,12 @@ public class InvoiceServiceImpl implements InvoiceService {
         Company company = securityService.checkLoginCompany(user);
 
         //找到發票主黨...檢查已開立成功...檢查沒有折讓過....檢查沒註銷過...檢查沒刪除過....開立
-        InvoiceMain invoiceMain = invoiceMainRepository.findByInvoiceIdAndUploadDone(voidedInvoiceDto.getInvoiceId()).orElseThrow(() -> new RuntimeException("無此發票 或 發票上傳中"));
+        InvoiceMain invoiceMain = invoiceMainRepository.findByIdAndProcessStatusAndUploadStatus(voidedInvoiceDto.getInvoiceId(), "開立", "C").orElseThrow(() -> new RuntimeException("無此發票可操作 或 發票上傳中"));
 
         if (invoiceMain.getAllowanceCount() != 0) {
             throw new RuntimeException("有折讓，不能作廢");
         }
-
-        VoidedInvoice voidedInvoice = new VoidedInvoice();
-        voidedInvoice.setInvoiceId(voidedInvoiceDto.getInvoiceId());
-        voidedInvoice.setVoidInvoiceNumber(invoiceMain.getInvoiceNumber());
-        voidedInvoice.setInvoiceDate(invoiceMain.getInvoiceDate());
-        voidedInvoice.setBuyerId(invoiceMain.getBuyer().getIdentifier());
-        voidedInvoice.setSellerId(invoiceMain.getSeller());
-        voidedInvoice.setVoidDate(voidedInvoiceDto.getVoidDate());
-        voidedInvoice.setVoidTime(voidedInvoiceDto.getVoidTime());
-        voidedInvoice.setVoidReason(voidedInvoiceDto.getVoidReason());
-        voidedInvoice.setRemark(voidedInvoiceDto.getRemark());
-        voidedInvoice.setReserved1(voidedInvoiceDto.getReserved1());
-        voidedInvoice.setReserved2(voidedInvoiceDto.getReserved2());
-        voidedInvoice.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), user.getId()));
-
+        VoidedInvoice voidedInvoice = voidedInvoiceDto.generateVoidedInvoice(voidedInvoiceDto, invoiceMain, user);
         voidedInvoiceRepository.save(voidedInvoice);
 
         try {
@@ -224,6 +200,11 @@ public class InvoiceServiceImpl implements InvoiceService {
             logger.error("xml模板套用異常");
         }
 
+        //更新發票主檔
+        invoiceMain.setProcessStatus("註銷");
+        invoiceMain.setUploadStatus("P");
+        invoiceMainRepository.save(invoiceMain);
+        logger.info("發票註銷操作成功,VoidedInvoice_id = {}", voidedInvoice.getId());
     }
 
 
