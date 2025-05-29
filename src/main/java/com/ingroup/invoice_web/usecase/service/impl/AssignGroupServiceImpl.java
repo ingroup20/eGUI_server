@@ -27,7 +27,7 @@ public class AssignGroupServiceImpl implements AssignGroupService {
     @Override
     public AssignGroup getAvailableAssign(String yearMonth, Company company, Printer printer) {
         Integer companyId = company.getCompanyId();
-        AssignGroup assignGroup = assignGroupRepository.findByCompanyAndAvailable(yearMonth, companyId)
+        AssignGroup assignGroup = assignGroupRepository.findFirstByYearMonthAndCompanyIdAndStatusOrderByStatusDescAssignIdAsc(yearMonth, companyId, 0)
                 .orElseThrow(() -> new NotEnoughAssignException("no enough assign , please set new assign"));
         assignGroup.setPrinterId(printer.getPrinterId());
         assignGroup.setStatus(1);
@@ -39,32 +39,32 @@ public class AssignGroupServiceImpl implements AssignGroupService {
     public Optional<AssignGroup> getInUseAssign(String yearMonth, Company company, Printer printer) {
         Integer companyId = company.getCompanyId();
         Integer printerId = printer.getPrinterId();
-        return assignGroupRepository.findByCompanyAndPrinterAndInUse(yearMonth, companyId, printerId);
+        return assignGroupRepository.findByYearMonthAndCompanyIdAndPrinterIdAndStatus(yearMonth, companyId, printerId, 1);
     }
 
     @Override
     public Optional<AssignGroup> getPerUseAssign(String yearMonth, Company company, Printer printer) {
         Integer companyId = company.getCompanyId();
         Integer printerId = printer.getPrinterId();
-        return assignGroupRepository.findByCompanyAndPrinterAndPreUse(yearMonth, companyId, printerId);
+        return assignGroupRepository.findFirstByYearMonthAndCompanyIdAndPrinterIdAndStatusOrderByAssignIdAsc(yearMonth, companyId, printerId, 0);
     }
 
     @Override
     public String takeAssignNo(AssignGroup assignGroup) throws Exception {
 
         if (assignGroup.getUsedCount() < 50) {
-            String assignNo ;
-                if(assignGroup.getLastUsedNo() == null){
-                    assignNo = assignGroup.getStartNo();
-                }else {
-                    int nextNo =Integer.valueOf(assignGroup.getLastUsedNo()) + 1;
-                    assignNo = String.format("%08d",nextNo);
-                }
-                assignGroup.setLastUsedNo(assignNo);
-                assignGroup.setUsedCount(assignGroup.getUsedCount() + 1);
-                assignGroupRepository.save(assignGroup);
+            String assignNo;
+            if (assignGroup.getLastUsedNo() == null) {
+                assignNo = assignGroup.getStartNo();
+            } else {
+                int nextNo = Integer.valueOf(assignGroup.getLastUsedNo()) + 1;
+                assignNo = String.format("%08d", nextNo);
+            }
+            assignGroup.setLastUsedNo(assignNo);
+            assignGroup.setUsedCount(assignGroup.getUsedCount() + 1);
+            assignGroupRepository.save(assignGroup);
 
-                return assignGroup.getInvoiceTrack() + assignNo;
+            return assignGroup.getInvoiceTrack() + assignNo;
 
         } else {
             assignGroup.setStatus(2);

@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "cancel_allowance")
+@Table(name = "canceled_allowance")
 public class CanceledAllowance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +25,11 @@ public class CanceledAllowance {
 
     @Embedded
     private EditRecord editRecord;
+
+
+    public Long getId() {
+        return id;
+    }
 
     public Long getAllowanceId() {
         return allowanceId;

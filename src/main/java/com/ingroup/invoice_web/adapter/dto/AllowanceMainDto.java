@@ -113,6 +113,7 @@ public class AllowanceMainDto {
 
     public AllowanceMain generateAllowanceMain(AllowanceMainDto allowanceMainDto, UserAccount userAccount, String migType) {
         AllowanceMain allowanceMain = new AllowanceMain();
+        allowanceMain.setCompanyId(userAccount.getCompanyId());
         allowanceMain.setAllowanceNumber(allowanceMainDto.getAllowanceNumber());
         allowanceMain.setAllowanceDate(allowanceMainDto.getAllowanceDate());
         allowanceMain.setSeller(allowanceMainDto.getSeller());
@@ -123,8 +124,8 @@ public class AllowanceMainDto {
         allowanceMain.setTaxAmount(allowanceMainDto.getTaxAmount());
         allowanceMain.setTotalAmount(allowanceMainDto.getTotalAmount());
         allowanceMain.setMigType(migType);
-        allowanceMain.setUploadStatus("上傳中");
-        allowanceMain.setProcessStatus("新開立");
+        allowanceMain.setUploadStatus("P");
+        allowanceMain.setProcessStatus("開立");
         allowanceMain.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), userAccount.getId()));
         return allowanceMain;
     }
@@ -133,6 +134,7 @@ public class AllowanceMainDto {
         List<AllowanceDetail> allowanceDetailList = new ArrayList<>();
         for (AllowanceDetailDto allowanceDetailDto : allowanceMainDto.getAllowanceDetails()) {
             AllowanceDetail allowanceDetail = new AllowanceDetail();
+            allowanceDetail.setCompanyId(userAccount.getCompanyId());
             allowanceDetail.setAllowanceId(allowanceId);
             allowanceDetail.setAllowanceDate(allowanceMainDto.getAllowanceDate());
             allowanceDetail.setOriginalInvoiceDate(allowanceDetailDto.getOriginalInvoiceDate());
