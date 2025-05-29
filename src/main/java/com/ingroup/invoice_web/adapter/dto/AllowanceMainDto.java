@@ -124,14 +124,15 @@ public class AllowanceMainDto {
         allowanceMain.setTotalAmount(allowanceMainDto.getTotalAmount());
         allowanceMain.setMigType(migType);
         allowanceMain.setUploadStatus("上傳中");
+        allowanceMain.setProcessStatus("新開立");
         allowanceMain.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), userAccount.getId()));
         return allowanceMain;
     }
 
     public List<AllowanceDetail> generateAllowanceDetail(AllowanceMainDto allowanceMainDto, UserAccount userAccount, Long allowanceId) {
         List<AllowanceDetail> allowanceDetailList = new ArrayList<>();
-        for(AllowanceDetailDto allowanceDetailDto : allowanceMainDto.getAllowanceDetails()) {
-            AllowanceDetail allowanceDetail= new AllowanceDetail();
+        for (AllowanceDetailDto allowanceDetailDto : allowanceMainDto.getAllowanceDetails()) {
+            AllowanceDetail allowanceDetail = new AllowanceDetail();
             allowanceDetail.setAllowanceId(allowanceId);
             allowanceDetail.setAllowanceDate(allowanceMainDto.getAllowanceDate());
             allowanceDetail.setOriginalInvoiceDate(allowanceDetailDto.getOriginalInvoiceDate());
