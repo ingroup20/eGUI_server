@@ -11,6 +11,7 @@ public class AllowanceMain {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Integer companyId;
     private String allowanceNumber;
     private LocalDate AllowanceDate;
     private String seller; //統一編號
@@ -24,12 +25,21 @@ public class AllowanceMain {
 
     private String migType; //上傳migType
     private String uploadStatus; //上傳狀態
+    private String processStatus;
 
     @Embedded
     private EditRecord editRecord;
 
     public Long getId() {
         return id;
+    }
+
+    public Integer getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
     }
 
     public String getAllowanceNumber() {
@@ -118,6 +128,14 @@ public class AllowanceMain {
 
     public void setUploadStatus(String uploadStatus) {
         this.uploadStatus = uploadStatus;
+    }
+
+    public String getProcessStatus() {
+        return processStatus;
+    }
+
+    public void setProcessStatus(String processStatus) {
+        this.processStatus = processStatus;
     }
 
     public EditRecord getEditRecord() {

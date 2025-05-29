@@ -11,6 +11,7 @@ public class VoidedInvoice {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
+    private Integer companyId;
     private Long invoiceId;
     private String voidInvoiceNumber;
     private LocalDate invoiceDate;
@@ -22,12 +23,21 @@ public class VoidedInvoice {
     private String remark;
     private String reserved1;
     private String reserved2;
+    private String uploadStatus; //上傳狀態
 
     @Embedded
     private EditRecord editRecord;
 
     public Long getId() {
         return id;
+    }
+
+    public Integer getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
     }
 
     public Long getInvoiceId() {
@@ -116,6 +126,14 @@ public class VoidedInvoice {
 
     public void setReserved2(String reserved2) {
         this.reserved2 = reserved2;
+    }
+
+    public String getUploadStatus() {
+        return uploadStatus;
+    }
+
+    public void setUploadStatus(String uploadStatus) {
+        this.uploadStatus = uploadStatus;
     }
 
     public EditRecord getEditRecord() {

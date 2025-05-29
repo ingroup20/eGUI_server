@@ -11,6 +11,7 @@ public class CanceledInvoice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Integer companyId;
     private Long invoiceId;
     private String cancelInvoiceNumber;
     private LocalDate invoiceDate;
@@ -23,12 +24,21 @@ public class CanceledInvoice {
     private String remark;
     private String reserved1;
     private String reserved2;
+    private String uploadStatus; //上傳狀態
 
     @Embedded
     private EditRecord editRecord;
 
     public Long getId() {
         return id;
+    }
+
+    public Integer getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
     }
 
     public Long getInvoiceId() {
@@ -133,5 +143,13 @@ public class CanceledInvoice {
 
     public void setEditRecord(EditRecord editRecord) {
         this.editRecord = editRecord;
+    }
+
+    public String getUploadStatus() {
+        return uploadStatus;
+    }
+
+    public void setUploadStatus(String uploadStatus) {
+        this.uploadStatus = uploadStatus;
     }
 }

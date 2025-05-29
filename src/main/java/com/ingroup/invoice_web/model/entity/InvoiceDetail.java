@@ -11,6 +11,7 @@ public class InvoiceDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Integer companyId;
     private LocalDate invoiceDate;
     private Long invoiceMainId;
     private String invoiceNumber;
@@ -30,6 +31,14 @@ public class InvoiceDetail {
 
     public Long getId() {
         return id;
+    }
+
+    public Integer getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
     }
 
     public LocalDate getInvoiceDate() {

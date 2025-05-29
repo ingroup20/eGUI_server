@@ -3,7 +3,8 @@ package com.ingroup.invoice_web.model.entity;
 import jakarta.persistence.Embedded;
 
 public class Customer {
-    private Integer customerId;
+    private Integer id;
+    private Integer companyId;
     private String customerCode; //客戶代號
     private String identifier; //識別碼(統一編號)
     private String name;

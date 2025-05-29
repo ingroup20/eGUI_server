@@ -74,41 +74,53 @@ BEFORE INSERT OR UPDATE ON invoice_detail
 FOR EACH ROW
 EXECUTE FUNCTION check_user_exists();
 
-CREATE TRIGGER trg_check_user_account_id_canceled_invoice
-BEFORE INSERT OR UPDATE ON canceled_invoice
-FOR EACH ROW
-EXECUTE FUNCTION check_user_exists();
-
-CREATE TRIGGER trg_check_user_account_id_voided_invoice
-BEFORE INSERT OR UPDATE ON voided_invoice
-FOR EACH ROW
-EXECUTE FUNCTION check_user_exists();
-
 CREATE TRIGGER trg_check_user_account_id_allowance_main
 BEFORE INSERT OR UPDATE ON canceled_allowance
 FOR EACH ROW
 EXECUTE FUNCTION check_user_exists();
-
 
 CREATE TRIGGER trg_check_user_account_id_allowance_detail 
 BEFORE INSERT OR UPDATE ON allowance_detail 
 FOR EACH ROW
 EXECUTE FUNCTION check_user_exists();
 
-CREATE TRIGGER trg_check_user_account_id_canceled_allowance
+
+--函式--
+
+CREATE OR REPLACE FUNCTION check_company_exists()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS(
+        SELECT 1 FROM ONLY company WHERE company_id = NEW.company_id
+    ) THEN
+        RAISE EXCEPTION 'Company ID % dose not exist.', NEW.company_id;
+    END IF;
+
+    RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+
+--綁定觸發器--
+
+CREATE TRIGGER trg_check_company_id_invoice_main
+BEFORE INSERT OR UPDATE ON invoice_main
+FOR EACH ROW
+EXECUTE FUNCTION check_company_exists();
+
+CREATE TRIGGER trg_check_company_id_invoice_detail
+BEFORE INSERT OR UPDATE ON invoice_detail
+FOR EACH ROW
+EXECUTE FUNCTION check_company_exists();
+
+CREATE TRIGGER trg_check_company_id_allowance_main
 BEFORE INSERT OR UPDATE ON canceled_allowance
 FOR EACH ROW
-EXECUTE FUNCTION check_user_exists();
+EXECUTE FUNCTION check_company_exists();
 
-CREATE TRIGGER trg_check_user_account_id_product_item
-BEFORE INSERT OR UPDATE ON product_item
+CREATE TRIGGER trg_check_company_id_allowance_detail 
+BEFORE INSERT OR UPDATE ON allowance_detail 
 FOR EACH ROW
-EXECUTE FUNCTION check_user_exists();
-
-
-
-
-
+EXECUTE FUNCTION check_company_exists();
 
 
 

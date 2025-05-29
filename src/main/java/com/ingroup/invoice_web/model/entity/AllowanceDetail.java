@@ -11,6 +11,7 @@ public class AllowanceDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Integer companyId;
     private Long allowanceId;
     private LocalDate allowanceDate;
     private LocalDate originalInvoiceDate;
@@ -31,6 +32,14 @@ public class AllowanceDetail {
 
     public Long getId() {
         return id;
+    }
+
+    public Integer getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
     }
 
     public EditRecord getEditRecord() {

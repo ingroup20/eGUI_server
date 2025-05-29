@@ -20,6 +20,7 @@ DROP TABLE IF EXISTS user_account CASCADE;
 
 CREATE TABLE invoice_main (
     id BIGSERIAL,
+    company_id INTEGER,
     year_month VARCHAR,
     invoice_number VARCHAR,
     invoice_date DATE,
@@ -103,6 +104,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TABLE invoice_detail (
     id BIGSERIAL,
+    company_id INTEGER,
     invoice_date DATE,
     invoice_main_id BIGINT,
     invoice_number VARCHAR,
@@ -150,6 +152,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TABLE allowance_main (
     id BIGSERIAL,
+    company_id INTEGER,
     allowance_number VARCHAR,
     allowance_date DATE,
     seller VARCHAR,
@@ -169,6 +172,7 @@ CREATE TABLE allowance_main (
     total_amount NUMERIC,
     mig_type VARCHAR,
     upload_status VARCHAR,
+    process_status VARCHAR,
     create_date TIMESTAMP,
     modify_date TIMESTAMP,
     modify_user_id INTEGER,
@@ -200,6 +204,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TABLE allowance_detail (
     id BIGSERIAL,
+    company_id INTEGER,
     allowance_id BIGINT,
     allowance_date DATE,
     original_invoice_date DATE,
@@ -286,7 +291,8 @@ CREATE TABLE user_account (
 );
 
 CREATE TABLE customer (
-    customer_id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
+    company_id INTEGER REFERENCES company(company_id),
     customer_code VARCHAR,
     identifier VARCHAR,
     name VARCHAR,
@@ -303,6 +309,7 @@ CREATE TABLE customer (
 
 CREATE TABLE canceled_invoice (
     id BIGSERIAL PRIMARY KEY,
+    company_id INTEGER REFERENCES company(company_id),
     invoice_id BIGINT,
     cancel_invoice_number VARCHAR,
     invoice_date DATE,
@@ -315,6 +322,7 @@ CREATE TABLE canceled_invoice (
     remark VARCHAR,
     reserved1 VARCHAR,
     reserved2 VARCHAR,
+    upload_status VARCHAR,
     create_date TIMESTAMP,
     modify_date TIMESTAMP,
     modify_user_id INTEGER REFERENCES user_account(id),
@@ -324,6 +332,7 @@ CREATE TABLE canceled_invoice (
 
 CREATE TABLE voided_invoice (
     id BIGSERIAL PRIMARY KEY,
+    company_id INTEGER REFERENCES company(company_id),
     invoice_id BIGINT,
     void_invoice_number VARCHAR,
     invoice_date DATE,
@@ -335,6 +344,7 @@ CREATE TABLE voided_invoice (
     remark VARCHAR,
     reserved1 VARCHAR,
     reserved2 VARCHAR,
+    upload_status VARCHAR,
     create_date TIMESTAMP,
     modify_date TIMESTAMP,
     modify_user_id INTEGER REFERENCES user_account(id),
@@ -361,6 +371,7 @@ CREATE TABLE assign_group (
 
 CREATE TABLE canceled_allowance (
     id BIGSERIAL PRIMARY KEY,
+    company_id INTEGER REFERENCES company(company_id),
     allowance_id BIGINT,
     cancel_allowance_number VARCHAR,
     allowance_date DATE,
@@ -370,6 +381,7 @@ CREATE TABLE canceled_allowance (
     cancel_time TIME,
     cancel_reason VARCHAR,
     remark VARCHAR,
+    upload_status VARCHAR,
     create_date TIMESTAMP,
     modify_date TIMESTAMP,
     modify_user_id INTEGER REFERENCES user_account(id),
@@ -378,7 +390,9 @@ CREATE TABLE canceled_allowance (
 
 
 CREATE TABLE product_item (
-    item_id BIGSERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
+    company_id INTEGER REFERENCES company(company_id),
+    item_code VARCHAR,
     description VARCHAR,
     quantity NUMERIC,
     unit VARCHAR,
@@ -403,6 +417,7 @@ CREATE TABLE notification (
 
 CREATE TABLE notify_log (
     id BIGSERIAL PRIMARY KEY,
+    company_id INTEGER REFERENCES company(company_id),
     send INTEGER,
     email VARCHAR,
     subject VARCHAR
