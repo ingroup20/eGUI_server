@@ -35,6 +35,7 @@ public class InvoiceMainDto {
     private String npoban; //發票捐贈對象
     private String bondedAreaConfirm; //買受人零稅率註記
     private String zeroTaxRateReason; //零稅率原因
+    private String migType;
 
     @NotNull
     private List<InvoiceDetailDto> invoiceDetailDtoList;
@@ -297,6 +298,13 @@ public class InvoiceMainDto {
         return conditionType;
     }
 
+    public String getMigType() {
+        return migType;
+    }
+
+    public void setMigType(String migType) {
+        this.migType = migType;
+    }
 
     public InvoiceMain generateInvoiceMain(InvoiceMainDto invoiceMainDto, String yearMonth, String invoiceNumber, Company company, UserAccount user, String randomNumber) throws ValidatedException {
         InvoiceMain invoiceMain = new InvoiceMain();

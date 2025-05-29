@@ -48,8 +48,10 @@ public class XmlGeneratorService {
         switch (SourceMigType) {
             case "A0401":
                 templatePath = "migxml/a0201.xml.ftl";
+                break;
             case "F0401":
                 templatePath = "migxml/f0501.xml.ftl";
+                break;
             default:
                 templatePath = "未知來源格式";
         }

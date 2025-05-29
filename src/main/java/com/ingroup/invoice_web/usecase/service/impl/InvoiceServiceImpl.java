@@ -96,7 +96,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             logger.info("assignGroup = {}", assignGroup);
             try {
                 invoiceNumber = assignGroupService.takeAssignNo(assignGroup);
-                if (redisLockService.checkLockKeyExists(invoiceNumber)) {
+                if (redisLockService.checkLockKeyExists(invoiceNumber,company,invoiceMainDto.getMigType())) {
                     logger.error("the invoice number is locked , invoice number = {}", invoiceNumber);
                     throw new KeyOnLockException("error, the invoice number is locked"); //todo 通知前端
                 }

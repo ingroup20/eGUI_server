@@ -25,23 +25,33 @@ public class AllowanceService {
     private final AllowanceDetailRepository allowanceDetailRepository;
     private final SecurityService securityService;
     private final XmlGeneratorService xmlGeneratorService;
+    private final RedisLockService redisLockService;
 
     public AllowanceService(InvoiceMainRepository invoiceMainRepository,
                             AllowanceMainRepository allowanceMainRepository,
                             AllowanceDetailRepository allowanceDetailRepository,
                             SecurityService securityService,
-                            XmlGeneratorService xmlGeneratorService) {
+                            XmlGeneratorService xmlGeneratorService,
+                            RedisLockService redisLockService) {
         this.invoiceMainRepository = invoiceMainRepository;
         this.allowanceMainRepository = allowanceMainRepository;
         this.allowanceDetailRepository = allowanceDetailRepository;
         this.securityService = securityService;
         this.xmlGeneratorService = xmlGeneratorService;
+        this.redisLockService = redisLockService;
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void issueAllowance(AllowanceMainDto allowanceMainDto) {
         UserAccount user = securityService.checkLoginUser();
         Company company = securityService.checkLoginCompany(user);
+
+        //檢查折讓單號不能重複，redis要鎖
+        if(redisLockService.checkLockKeyExists(allowanceMainDto.getAllowanceNumber(), company, allowanceMainDto.getSourceMigType())){
+            logger.warn("此折讓單號碼已被使用");
+            throw new RuntimeException("此折讓單號碼已被使用");
+        }
+
         Long originalInvoiceId = allowanceMainDto.getAllowanceDetails().get(0).getOriginalInvoiceId();
         //檢查原始發票已開立，非註銷、非作廢
         InvoiceMain originalInvoice = invoiceMainRepository.findByInvoiceIdAndUploadDone(originalInvoiceId).orElseThrow(() -> new NotfoundOriginalSourceException("無原始可折發票"));
