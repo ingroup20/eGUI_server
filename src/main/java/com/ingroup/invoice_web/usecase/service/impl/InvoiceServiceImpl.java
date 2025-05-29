@@ -99,6 +99,8 @@ public class InvoiceServiceImpl implements InvoiceService {
                 if (redisLockService.checkLockKeyExists(invoiceNumber,company,invoiceMainDto.getMigType())) {
                     logger.error("the invoice number is locked , invoice number = {}", invoiceNumber);
                     throw new KeyOnLockException("error, the invoice number is locked"); //todo 通知前端
+                }else{
+                    redisLockService.issInvoiceNumberLock(invoiceNumber,company);
                 }
                 break;
             } catch (UsedUpAssignException e) {
