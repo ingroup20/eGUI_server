@@ -8,6 +8,7 @@ import com.ingroup.invoice_web.model.repository.AllowanceDetailRepository;
 import com.ingroup.invoice_web.model.repository.AllowanceMainRepository;
 import com.ingroup.invoice_web.model.repository.CanceledAllowanceRepository;
 import com.ingroup.invoice_web.model.repository.InvoiceMainRepository;
+import com.ingroup.invoice_web.usecase.amqp.RabbitMQProducer;
 import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ public class AllowanceService {
     private final SecurityService securityService;
     private final XmlGeneratorService xmlGeneratorService;
     private final RedisLockService redisLockService;
+    private final RabbitMQProducer rabbitMQProducer;
 
     public AllowanceService(InvoiceMainRepository invoiceMainRepository,
                             AllowanceMainRepository allowanceMainRepository,
@@ -36,7 +38,8 @@ public class AllowanceService {
                             CanceledAllowanceRepository canceledAllowanceRepository,
                             SecurityService securityService,
                             XmlGeneratorService xmlGeneratorService,
-                            RedisLockService redisLockService) {
+                            RedisLockService redisLockService,
+                            RabbitMQProducer rabbitMQProducer) {
         this.invoiceMainRepository = invoiceMainRepository;
         this.allowanceMainRepository = allowanceMainRepository;
         this.allowanceDetailRepository = allowanceDetailRepository;
@@ -44,6 +47,7 @@ public class AllowanceService {
         this.securityService = securityService;
         this.xmlGeneratorService = xmlGeneratorService;
         this.redisLockService = redisLockService;
+        this.rabbitMQProducer = rabbitMQProducer;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -101,9 +105,9 @@ public class AllowanceService {
         //產XML TO QUEUE
         try {
             String xml = xmlGeneratorService.generateAllowanceXML(allowanceMain, allowanceDetailList, company);
+            logger.debug("send allowance xml to turnkey allowance_id = {}", allowanceMain.getId());
+            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml);
 
-            //queue接到後才鎖定發票號碼
-            System.out.println(xml);
         } catch (IOException | TemplateException e) {
             logger.error("generateAllowanceXML error");
             throw new GenerateXmlException("產生Allowance XML 發生錯誤，original Allowance id : " + allowanceMain.getId());
@@ -135,9 +139,9 @@ public class AllowanceService {
         //XML
         try {
             String xml = xmlGeneratorService.generateCanceledAllowanceXML(canceledAllowance);
+            logger.debug("send canceled allowance xml to turnkey allowance_id = {}", canceledAllowance.getAllowanceId());
+            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml);
 
-            //queue接到後才鎖定發票號碼
-            System.out.println(xml);
         } catch (IOException | TemplateException e) {
             logger.error("generateCanceledAllowanceXML");
             throw new GenerateXmlException("產生cancelAllowance XML 發生錯誤，original Allowance id : " + canceledAllowance.getAllowanceId());

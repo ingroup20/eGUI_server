@@ -15,6 +15,7 @@ import com.ingroup.invoice_web.model.repository.CanceledInvoiceRepository;
 import com.ingroup.invoice_web.model.repository.InvoiceDetailRepository;
 import com.ingroup.invoice_web.model.repository.InvoiceMainRepository;
 import com.ingroup.invoice_web.model.repository.VoidedInvoiceRepository;
+import com.ingroup.invoice_web.usecase.amqp.RabbitMQProducer;
 import com.ingroup.invoice_web.usecase.service.*;
 import freemarker.template.TemplateException;
 import org.slf4j.Logger;
@@ -45,6 +46,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final XmlGeneratorService xmlGeneratorService;
     private final SecurityService securityService;
     private final RedisLockService redisLockService;
+    private final RabbitMQProducer rabbitMQProducer;
 
     private final String B2C_SALES_PRICE_TYPE = "C0401";
 
@@ -55,7 +57,8 @@ public class InvoiceServiceImpl implements InvoiceService {
                        VoidedInvoiceRepository voidedInvoiceRepository,
                        XmlGeneratorService xmlGeneratorService,
                        SecurityService securityService,
-                       RedisLockService redisLockService) {
+                       RedisLockService redisLockService,
+                       RabbitMQProducer rabbitMQProducer) {
         this.assignGroupService = assignGroupService;
         this.invoiceMainRepository = invoiceMainRepository;
         this.invoiceDetailRepository = invoiceDetailRepository;
@@ -64,6 +67,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         this.xmlGeneratorService = xmlGeneratorService;
         this.securityService = securityService;
         this.redisLockService = redisLockService;
+        this.rabbitMQProducer = rabbitMQProducer;
     }
 
     @Override
@@ -98,10 +102,12 @@ public class InvoiceServiceImpl implements InvoiceService {
             logger.info("assignGroup = {}", assignGroup);
             try {
                 invoiceNumber = assignGroupService.takeAssignNo(assignGroup);
+                //fixme 要檢查開立日期必須在前個號碼之後
                 if (redisLockService.checkLockKeyExists(invoiceNumber, company, invoiceMainDto.getMigType())) {
                     logger.error("the invoice number is locked , invoice number = {}", invoiceNumber);
                     throw new TargetKeyLockedException("error, the invoice number is locked"); //todo 通知前端
                 } else {
+                    //鎖發票號碼
                     redisLockService.issInvoiceNumberLock(invoiceNumber, company);
                 }
                 break;
@@ -127,9 +133,9 @@ public class InvoiceServiceImpl implements InvoiceService {
         try {
             //xml要傳到queue
             String xml = xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList, company);
+            logger.debug("send invoice xml to turnkey invoice_id = {}", invoiceMain.getId());
+            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml);
 
-            //queue接到後才鎖定發票號碼
-            System.out.println(xml);
         } catch (IOException | TemplateException e) {
             logger.error("generateInvoiceXML error");
             throw new GenerateXmlException("Invoice XML 發生錯誤， invoice id : " + invoiceMain.getId());
@@ -160,7 +166,9 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (invoiceMain.getMigType().equals(canceledInvoiceDto.getSourceMigType())) {
             try {
                 //xml要傳到queue
-                xmlGeneratorService.generateCanceledInvoiceXML(canceledInvoice, canceledInvoiceDto.getSourceMigType());
+                String xml = xmlGeneratorService.generateCanceledInvoiceXML(canceledInvoice, canceledInvoiceDto.getSourceMigType());
+                logger.debug("send canceled invoice xml to turnkey invoice_id = {}", canceledInvoice.getInvoiceId());
+                rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml);
 
             } catch (IOException | TemplateException e) {
                 logger.error("generateCanceledInvoiceXML error");
@@ -195,7 +203,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         try {
             //xml要傳到queue
-            xmlGeneratorService.generateVoidedInvoiceXML(voidedInvoice);
+            String xml = xmlGeneratorService.generateVoidedInvoiceXML(voidedInvoice);
+            logger.debug("send voided invoice xml to turnkey invoice_id = {}", voidedInvoice.getInvoiceId());
+            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml);
 
         } catch (IOException | TemplateException e) {
             logger.error("generateVoidedInvoiceXML error");
