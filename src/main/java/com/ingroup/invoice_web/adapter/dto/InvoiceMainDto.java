@@ -1,6 +1,6 @@
 package com.ingroup.invoice_web.adapter.dto;
 
-import com.ingroup.invoice_web.exception.ValidatedException;
+import com.ingroup.invoice_web.exception.runtime.ValidatedException;
 import com.ingroup.invoice_web.model.entity.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.ingroup.invoice_web.util.DateTimeUtil.getCurrentDateTime;
 
 public class InvoiceMainDto {
     @NotNull

@@ -111,6 +111,7 @@ public class CanceledInvoiceDto {
         canceledInvoice.setRemark(canceledInvoiceDto.getRemark());
         canceledInvoice.setReserved1(canceledInvoiceDto.getReserved1());
         canceledInvoice.setReserved2(canceledInvoiceDto.getReserved2());
+        canceledInvoice.setUploadStatus("P");
         canceledInvoice.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), userAccount.getId()));
         return canceledInvoice;
     }

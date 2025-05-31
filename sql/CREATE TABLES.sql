@@ -374,6 +374,7 @@ CREATE TABLE canceled_allowance (
     company_id INTEGER REFERENCES company(company_id),
     allowance_id BIGINT,
     cancel_allowance_number VARCHAR,
+    allowance_type VARCHAR,
     allowance_date DATE,
     buyer_id VARCHAR,
     seller_id VARCHAR,

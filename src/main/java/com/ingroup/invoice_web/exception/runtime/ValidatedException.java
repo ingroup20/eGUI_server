@@ -1,4 +1,4 @@
-package com.ingroup.invoice_web.exception;
+package com.ingroup.invoice_web.exception.runtime;
 
 import com.ingroup.invoice_web.util.constant.ErrorCodeEnum;
 import org.springframework.http.HttpStatus;

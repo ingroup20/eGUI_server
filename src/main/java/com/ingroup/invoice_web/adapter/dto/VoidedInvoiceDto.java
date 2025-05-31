@@ -77,6 +77,7 @@ public class VoidedInvoiceDto {
         voidedInvoice.setRemark(voidedInvoiceDto.getRemark());
         voidedInvoice.setReserved1(voidedInvoiceDto.getReserved1());
         voidedInvoice.setReserved2(voidedInvoiceDto.getReserved2());
+        voidedInvoice.setUploadStatus("P");
         voidedInvoice.setEditRecord(new EditRecord(LocalDateTime.now(), LocalDateTime.now(), userAccount.getId()));
         return voidedInvoice;
     }

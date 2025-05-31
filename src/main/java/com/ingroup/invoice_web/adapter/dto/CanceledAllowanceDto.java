@@ -12,6 +12,7 @@ import java.time.LocalTime;
 public class CanceledAllowanceDto {
     private Long allowanceId;
     private String cancelAllowanceNumber;
+    private String allowanceType;
     private LocalDate allowanceDate;
     private LocalDate cancelDate;
     private LocalTime cancelTime;
@@ -33,6 +34,14 @@ public class CanceledAllowanceDto {
 
     public void setCancelAllowanceNumber(String cancelAllowanceNumber) {
         this.cancelAllowanceNumber = cancelAllowanceNumber;
+    }
+
+    public String getAllowanceType() {
+        return allowanceType;
+    }
+
+    public void setAllowanceType(String allowanceType) {
+        this.allowanceType = allowanceType;
     }
 
     public LocalDate getAllowanceDate() {
@@ -88,6 +97,7 @@ public class CanceledAllowanceDto {
         canceledAllowance.setCompanyId(userAccount.getCompanyId());
         canceledAllowance.setAllowanceId(canceledAllowanceDto.getAllowanceId());
         canceledAllowance.setCancelAllowanceNumber(canceledAllowanceDto.getCancelAllowanceNumber());
+        canceledAllowance.setAllowanceType(canceledAllowanceDto.getAllowanceType());
         canceledAllowance.setAllowanceDate(canceledAllowanceDto.getAllowanceDate());
         canceledAllowance.setBuyerId(allowanceMain.getBuyer().getIdentifier());
         canceledAllowance.setSellerId(allowanceMain.getSeller());
@@ -95,6 +105,7 @@ public class CanceledAllowanceDto {
         canceledAllowance.setCancelTime(canceledAllowanceDto.getCancelTime());
         canceledAllowance.setCancelReason(canceledAllowanceDto.getCancelReason());
         canceledAllowance.setRemark(canceledAllowanceDto.getRemark());
+        canceledAllowance.setUploadStatus("P");
         canceledAllowance.setEditRecord(new EditRecord(LocalDateTime.now(),LocalDateTime.now(),userAccount.getId()));
         return canceledAllowance;
     }

@@ -94,4 +94,20 @@ public class XmlGeneratorService {
         return writer.toString(); // 可改成輸出成檔案
     }
 
+    public String generateCanceledAllowanceXML(CanceledAllowance canceledAllowance) throws IOException, TemplateException {
+        // 準備資料模型
+        Map<String, Object> model = new HashMap<>();
+        model.put("canceledAllowance", canceledAllowance);
+
+        // 載入模板
+        Template template = freemarkerConfig.getTemplate("migxml/g0501.xml.ftl");
+
+        // 合併模板與資料
+        StringWriter writer = new StringWriter();
+        template.process(model, writer);
+
+        return writer.toString(); // 可改成輸出成檔案
+    }
+
+
 }

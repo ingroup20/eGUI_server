@@ -14,6 +14,7 @@ public class CanceledAllowance {
     private Integer companyId;
     private Long allowanceId;
     private String cancelAllowanceNumber;
+    private String AllowanceType;
     private LocalDate allowanceDate;
     private String buyerId;
     private String sellerId;
@@ -53,6 +54,14 @@ public class CanceledAllowance {
 
     public void setCancelAllowanceNumber(String cancelAllowanceNumber) {
         this.cancelAllowanceNumber = cancelAllowanceNumber;
+    }
+
+    public String getAllowanceType() {
+        return AllowanceType;
+    }
+
+    public void setAllowanceType(String allowanceType) {
+        AllowanceType = allowanceType;
     }
 
     public LocalDate getAllowanceDate() {

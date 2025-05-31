@@ -1,7 +1,7 @@
 package com.ingroup.invoice_web.usecase.service.impl;
 
 import com.ingroup.invoice_web.exception.NotEnoughAssignException;
-import com.ingroup.invoice_web.exception.UsedUpAssignException;
+import com.ingroup.invoice_web.exception.runtime.UsedUpAssignException;
 import com.ingroup.invoice_web.model.entity.AssignGroup;
 import com.ingroup.invoice_web.model.entity.Company;
 import com.ingroup.invoice_web.model.entity.Printer;
@@ -25,7 +25,7 @@ public class AssignGroupServiceImpl implements AssignGroupService {
 
 
     @Override
-    public AssignGroup getAvailableAssign(String yearMonth, Company company, Printer printer) {
+    public AssignGroup getAvailableAssign(String yearMonth, Company company, Printer printer) throws Exception{
         Integer companyId = company.getCompanyId();
         AssignGroup assignGroup = assignGroupRepository.findFirstByYearMonthAndCompanyIdAndStatusOrderByStatusDescAssignIdAsc(yearMonth, companyId, 0)
                 .orElseThrow(() -> new NotEnoughAssignException("no enough assign , please set new assign"));
@@ -50,7 +50,7 @@ public class AssignGroupServiceImpl implements AssignGroupService {
     }
 
     @Override
-    public String takeAssignNo(AssignGroup assignGroup) throws Exception {
+    public String takeAssignNo(AssignGroup assignGroup) throws UsedUpAssignException {
 
         if (assignGroup.getUsedCount() < 50) {
             String assignNo;

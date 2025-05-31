@@ -1,4 +1,4 @@
-package com.ingroup.invoice_web.exception;
+package com.ingroup.invoice_web.exception.runtime;
 
 public class UsedUpAssignException extends RuntimeException {
 

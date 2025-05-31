@@ -6,11 +6,11 @@ import com.ingroup.invoice_web.adapter.dto.VoidedInvoiceDto;
 
 public interface InvoiceService {
 
-    String issueInvoice(InvoiceMainDto invoiceMainDto);
+    String issueInvoice(InvoiceMainDto invoiceMainDto) throws Exception;
 
-    void cancelInvoice(CanceledInvoiceDto canceledInvoiceDto);
+    void cancelInvoice(CanceledInvoiceDto canceledInvoiceDto) throws Exception;
 
-    void voidInvoice(VoidedInvoiceDto voidedInvoiceDto);
+    void voidInvoice(VoidedInvoiceDto voidedInvoiceDto) throws Exception;
 
 
 }

@@ -1,6 +1,6 @@
 package com.ingroup.invoice_web.usecase.service;
 
-import com.ingroup.invoice_web.exception.TryLockOverTimeException;
+import com.ingroup.invoice_web.exception.runtime.TryLockOverTimeException;
 import com.ingroup.invoice_web.model.entity.Company;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;

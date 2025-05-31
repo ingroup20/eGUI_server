@@ -4,10 +4,12 @@ import com.ingroup.invoice_web.adapter.dto.CanceledInvoiceDto;
 import com.ingroup.invoice_web.adapter.dto.InvoiceDetailDto;
 import com.ingroup.invoice_web.adapter.dto.InvoiceMainDto;
 import com.ingroup.invoice_web.adapter.dto.VoidedInvoiceDto;
-import com.ingroup.invoice_web.exception.IssueInvoiceException;
-import com.ingroup.invoice_web.exception.KeyOnLockException;
-import com.ingroup.invoice_web.exception.UsedUpAssignException;
-import com.ingroup.invoice_web.exception.ValidatedException;
+import com.ingroup.invoice_web.exception.GenerateXmlException;
+import com.ingroup.invoice_web.exception.NoTargetAvailableException;
+import com.ingroup.invoice_web.exception.OtherOperationInUseException;
+import com.ingroup.invoice_web.exception.TargetKeyLockedException;
+import com.ingroup.invoice_web.exception.runtime.UsedUpAssignException;
+import com.ingroup.invoice_web.exception.runtime.ValidatedException;
 import com.ingroup.invoice_web.model.entity.*;
 import com.ingroup.invoice_web.model.repository.CanceledInvoiceRepository;
 import com.ingroup.invoice_web.model.repository.InvoiceDetailRepository;
@@ -66,11 +68,12 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String issueInvoice(InvoiceMainDto invoiceMainDto) throws IssueInvoiceException {
+    public String issueInvoice(InvoiceMainDto invoiceMainDto) throws Exception {
         UserAccount user = securityService.checkLoginUser();
         Company company = securityService.checkLoginCompany(user);
         Printer printer = securityService.checkLoginPrinter(user);
 
+        logger.info("======= start issue invoice =======");
         String invoiceNumber = "";
         String yearMonth = getYearMonthROC(invoiceMainDto.getInvoiceDate());
         String randomNumber = generateRandomNumber();
@@ -97,7 +100,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 invoiceNumber = assignGroupService.takeAssignNo(assignGroup);
                 if (redisLockService.checkLockKeyExists(invoiceNumber, company, invoiceMainDto.getMigType())) {
                     logger.error("the invoice number is locked , invoice number = {}", invoiceNumber);
-                    throw new KeyOnLockException("error, the invoice number is locked"); //todo 通知前端
+                    throw new TargetKeyLockedException("error, the invoice number is locked"); //todo 通知前端
                 } else {
                     redisLockService.issInvoiceNumberLock(invoiceNumber, company);
                 }
@@ -106,9 +109,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 logger.debug("當前字軌無號碼，重取一次字軌");
                 assignGroup = null;
                 continue;
-            } catch (Exception e) {
-                logger.error(e.getMessage());
-                break;
             }
         } while (assignGroup == null);
 
@@ -130,19 +130,18 @@ public class InvoiceServiceImpl implements InvoiceService {
 
             //queue接到後才鎖定發票號碼
             System.out.println(xml);
-        } catch (IOException e) {
-            logger.error("產xml檔案異常");
-        } catch (TemplateException e) {
-            logger.error("xml模板套用異常");
+        } catch (IOException | TemplateException e) {
+            logger.error("generateInvoiceXML error");
+            throw new GenerateXmlException("Invoice XML 發生錯誤， invoice id : " + invoiceMain.getId());
         }
-        logger.info("發票開立操作成功, InvoiceMain_id = {}", invoiceMain.getId());
+        logger.info("Issue Invoice Operation Success, invoiceMain_id = {}", invoiceMain.getId());
         return invoiceNumber;
 
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void cancelInvoice(CanceledInvoiceDto canceledInvoiceDto) {
+    public void cancelInvoice(CanceledInvoiceDto canceledInvoiceDto) throws Exception {
         UserAccount user = securityService.checkLoginUser();
         Company company = securityService.checkLoginCompany(user);
 
@@ -150,8 +149,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         InvoiceMain invoiceMain = invoiceMainRepository.findByIdAndProcessStatusAndUploadStatus(canceledInvoiceDto.getInvoiceId(), "開立", "C").orElseThrow(() -> new RuntimeException("無此發票可操作 或 發票上傳中"));
 
         if (invoiceMain.getAllowanceCount() != 0) {
-            throw new RuntimeException("有折讓，不能作廢");
+            logger.error("allowance still exists");
+            throw new OtherOperationInUseException("有折讓，不能作廢");
         }
+        logger.info("======= start cancel invoice, original invoice id :{} =======", canceledInvoiceDto.getInvoiceId());
 
         CanceledInvoice canceledInvoice = canceledInvoiceDto.generateCanceledInvoice(canceledInvoiceDto, invoiceMain, user);
         canceledInvoiceRepository.save(canceledInvoice);
@@ -161,10 +162,9 @@ public class InvoiceServiceImpl implements InvoiceService {
                 //xml要傳到queue
                 xmlGeneratorService.generateCanceledInvoiceXML(canceledInvoice, canceledInvoiceDto.getSourceMigType());
 
-            } catch (IOException e) {
-                logger.error("產xml檔案異常");
-            } catch (TemplateException e) {
-                logger.error("xml模板套用異常");
+            } catch (IOException | TemplateException e) {
+                logger.error("generateCanceledInvoiceXML error");
+                throw new GenerateXmlException("canceledInvoice XML 發生錯誤，original invoice id : " + canceledInvoice.getInvoiceId());
             }
         }
 
@@ -172,21 +172,24 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoiceMain.setProcessStatus("作廢");
         invoiceMain.setUploadStatus("P");
         invoiceMainRepository.save(invoiceMain);
-        logger.info("發票作廢操作成功, CanceledInvoice_id = {}", canceledInvoice.getId());
+        logger.info("Cancel Invoice Operation Success, canceledInvoice_id = {}", canceledInvoice.getId());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void voidInvoice(VoidedInvoiceDto voidedInvoiceDto) {
+    public void voidInvoice(VoidedInvoiceDto voidedInvoiceDto) throws Exception {
         UserAccount user = securityService.checkLoginUser();
         Company company = securityService.checkLoginCompany(user);
 
         //找到發票主黨...檢查已開立成功...檢查沒有折讓過....檢查沒註銷過...檢查沒刪除過....開立
-        InvoiceMain invoiceMain = invoiceMainRepository.findByIdAndProcessStatusAndUploadStatus(voidedInvoiceDto.getInvoiceId(), "開立", "C").orElseThrow(() -> new RuntimeException("無此發票可操作 或 發票上傳中"));
+        InvoiceMain invoiceMain = invoiceMainRepository.findByIdAndProcessStatusAndUploadStatus(voidedInvoiceDto.getInvoiceId(), "開立", "C").orElseThrow(() -> new NoTargetAvailableException("無此發票可操作 或 發票上傳中"));
 
         if (invoiceMain.getAllowanceCount() != 0) {
-            throw new RuntimeException("有折讓，不能作廢");
+            logger.error("allowance still exists");
+            throw new OtherOperationInUseException("有折讓，不能作廢");
         }
+
+        logger.info("======= start void invoice, original invoice id :{} =======", voidedInvoiceDto.getInvoiceId());
         VoidedInvoice voidedInvoice = voidedInvoiceDto.generateVoidedInvoice(voidedInvoiceDto, invoiceMain, user);
         voidedInvoiceRepository.save(voidedInvoice);
 
@@ -194,21 +197,20 @@ public class InvoiceServiceImpl implements InvoiceService {
             //xml要傳到queue
             xmlGeneratorService.generateVoidedInvoiceXML(voidedInvoice);
 
-        } catch (IOException e) {
-            logger.error("產xml檔案異常");
-        } catch (TemplateException e) {
-            logger.error("xml模板套用異常");
+        } catch (IOException | TemplateException e) {
+            logger.error("generateVoidedInvoiceXML error");
+            throw new GenerateXmlException("voidedInvoice XML 發生錯誤，original invoice id : " + voidedInvoice.getInvoiceId());
         }
 
         //更新發票主檔
         invoiceMain.setProcessStatus("註銷");
         invoiceMain.setUploadStatus("P");
         invoiceMainRepository.save(invoiceMain);
-        logger.info("發票註銷操作成功,VoidedInvoice_id = {}", voidedInvoice.getId());
+        logger.info("Void Invoice Operation Success, voidedInvoice_id = {}", voidedInvoice.getId());
     }
 
 
-    private InvoiceMainDto calculateAmount(InvoiceMainDto invoiceMainDto) throws ValidatedException {
+    private void calculateAmount(InvoiceMainDto invoiceMainDto) throws ValidatedException {
 
         //總金額
         List<InvoiceDetailDto> detailList = invoiceMainDto.getInvoiceDetailDtoList();
@@ -267,17 +269,14 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoiceMainDto.setFreeTaxSalesAmount(freeTaxSalesAmount);
         invoiceMainDto.setZeroTaxSalesAmount(zeroTaxSalesAmount);
 
-
-        return invoiceMainDto;
     }
 
 
-    private InvoiceMainDto calculateTax(InvoiceMainDto invoiceMainDto) {
+    private void calculateTax(InvoiceMainDto invoiceMainDto) {
         BigDecimal taxAmount = new BigDecimal(BigInteger.ZERO);
         BigDecimal taxRate = invoiceMainDto.getTaxRate();
         taxAmount = taxAmount.add(taxRate.multiply(invoiceMainDto.getSalesAmount()));
         invoiceMainDto.setTaxAmount(taxAmount); //總稅額
-        return invoiceMainDto;
     }
 
 
