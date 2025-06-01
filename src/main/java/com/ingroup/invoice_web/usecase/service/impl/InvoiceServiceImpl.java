@@ -17,6 +17,7 @@ import com.ingroup.invoice_web.model.repository.InvoiceMainRepository;
 import com.ingroup.invoice_web.model.repository.VoidedInvoiceRepository;
 import com.ingroup.invoice_web.usecase.amqp.RabbitMQProducer;
 import com.ingroup.invoice_web.usecase.service.*;
+import com.ingroup.invoice_web.util.constant.MigTypeEnum;
 import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,7 +135,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             //xml要傳到queue
             String xml = xmlGeneratorService.generateInvoiceXML(invoiceMain, invoiceDetailList, company);
             logger.debug("send invoice xml to turnkey invoice_id = {}", invoiceMain.getId());
-            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml);
+            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml, MigTypeEnum.ISSUE_EVIDENCE_INVOICE.getMigTypeCode());
 
         } catch (IOException | TemplateException e) {
             logger.error("generateInvoiceXML error");
@@ -168,7 +169,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 //xml要傳到queue
                 String xml = xmlGeneratorService.generateCanceledInvoiceXML(canceledInvoice, canceledInvoiceDto.getSourceMigType());
                 logger.debug("send canceled invoice xml to turnkey invoice_id = {}", canceledInvoice.getInvoiceId());
-                rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml);
+                rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml,MigTypeEnum.CATCH_ISSUE_EXCHANGE_INVOICE.getMigTypeCode());
 
             } catch (IOException | TemplateException e) {
                 logger.error("generateCanceledInvoiceXML error");
@@ -205,7 +206,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             //xml要傳到queue
             String xml = xmlGeneratorService.generateVoidedInvoiceXML(voidedInvoice);
             logger.debug("send voided invoice xml to turnkey invoice_id = {}", voidedInvoice.getInvoiceId());
-            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml);
+            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml,MigTypeEnum.VOID_EVIDENCE_INVOICE.getMigTypeCode());
 
         } catch (IOException | TemplateException e) {
             logger.error("generateVoidedInvoiceXML error");

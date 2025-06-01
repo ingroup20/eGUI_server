@@ -9,6 +9,7 @@ import com.ingroup.invoice_web.model.repository.AllowanceMainRepository;
 import com.ingroup.invoice_web.model.repository.CanceledAllowanceRepository;
 import com.ingroup.invoice_web.model.repository.InvoiceMainRepository;
 import com.ingroup.invoice_web.usecase.amqp.RabbitMQProducer;
+import com.ingroup.invoice_web.util.constant.MigTypeEnum;
 import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +107,7 @@ public class AllowanceService {
         try {
             String xml = xmlGeneratorService.generateAllowanceXML(allowanceMain, allowanceDetailList, company);
             logger.debug("send allowance xml to turnkey allowance_id = {}", allowanceMain.getId());
-            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml);
+            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml, MigTypeEnum.CANCEL_EVIDENCE_ALLOWANCE.getMigTypeCode());
 
         } catch (IOException | TemplateException e) {
             logger.error("generateAllowanceXML error");
@@ -140,7 +141,7 @@ public class AllowanceService {
         try {
             String xml = xmlGeneratorService.generateCanceledAllowanceXML(canceledAllowance);
             logger.debug("send canceled allowance xml to turnkey allowance_id = {}", canceledAllowance.getAllowanceId());
-            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml);
+            rabbitMQProducer.sendXmlToTurnkeyMessageRelay(xml, MigTypeEnum.CANCEL_EVIDENCE_ALLOWANCE.getMigTypeCode());
 
         } catch (IOException | TemplateException e) {
             logger.error("generateCanceledAllowanceXML");

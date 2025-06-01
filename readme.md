@@ -13,7 +13,7 @@
 * RepeatOperationTargetException
 * TargetKeyLockedException
 
-## queue 先以 topic exchange 建立(微服務)
+## queue 先以 topic exchange 建立
 * 可能會需要1.傳xml 2.成功寄mail 採用分組key模式
 * 設計死信轉x-dead-letter-exchange機制，當 queue訊息因為錯誤被拒絕（例如 reject 或 TTL 過期），會轉送到這裡
 * 從spring boot bean 自動建立 rabbitmq 對應的queue(但在rabbitmq上exchange要手動先建立)  
