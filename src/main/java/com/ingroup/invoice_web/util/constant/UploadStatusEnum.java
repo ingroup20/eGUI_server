@@ -24,4 +24,13 @@ public enum UploadStatusEnum {
         return statusMessage;
     }
 
+    public static UploadStatusEnum fromStatusCode(String statusCode) {
+        for (UploadStatusEnum uploadStatusEnum : UploadStatusEnum.values()) {
+            if (uploadStatusEnum.getStatusCode().equals(statusCode)) {
+                return uploadStatusEnum;
+            }
+        }
+        return null;
+    }
+
 }
